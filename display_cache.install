@@ -1,0 +1,10 @@
+<?php
+
+/**
+ * Implements hook_schema.
+ * @return array
+ */
+function display_cache_schema() {
+  $schema['cache_display_cache'] = drupal_get_schema_unprocessed('system', 'cache');
+  return $schema;
+}

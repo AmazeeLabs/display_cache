@@ -1,0 +1,222 @@
+<?php
+/**
+ * @file
+ * Module file for Display Cache.
+ */
+
+define('DISPLAY_CACHE_NO_OVERRIDE', '0');
+
+define('DISPLAY_CACHE_ENTITY_OVERRIDE', '1');
+
+/**
+ * Implements hook_flush_caches.
+ */
+function display_cache_flush_caches() {
+  return array('cache_display_cache');
+}
+
+/**
+ * Implements hook_admin_menu_cache_info.
+ */
+function display_cache_admin_menu_cache_info() {
+  $links['display_cache'] = array(
+    'title' => 'Display Caches',
+  );
+  return $links;
+}
+
+/**
+ * Implements hook_menu().
+ */
+function display_cache_menu() {
+  $menu_items = array();
+
+  // Menu item to provide flush cache via admin_menu.
+  if (module_exists('admin_menu')) {
+    $menu_items['admin_menu/flush-cache/display_cache'] = array(
+      'page callback' => '_display_cache_flush_cache',
+      'access arguments' => array('administer'),
+      'type' => MENU_CALLBACK,
+    );
+  }
+
+// Menu item for configurations.
+  $menu_items['admin/config/development/performance/display-cache'] = array(
+    'title' => 'Display Cache Config',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('display_cache_settings_form'),
+    'access arguments' => array('administer display cache'),
+    'file' => 'display_cache.admin.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  return $menu_items;
+}
+
+/**
+ * Implements hook_views_api().
+ */
+function display_cache_views_api() {
+  return array(
+    'api' => 3,
+    'path' => drupal_get_path('module', 'display_cache') . '/views',
+  );
+}
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function display_cache_ctools_plugin_directory($module, $plugin) {
+  if ($module == 'ctools' && $plugin === 'content_types') {
+    return "plugins/$plugin";
+  }
+}
+
+/**
+ * Main function that return the html for a given entity with a specific display mode.
+ * The function get the content from cache and if no content in cache write it to the cache for the next time.
+ * @param $entity_type
+ *   Type like 'node' or 'comment'.
+ * @param $entity_id
+ *   The entity id like the node id.
+ * @param $view_mode
+ *   View mode like 'full' or 'teaser'.
+ * @param $reset
+ *   Resets the cache while rendering.
+ * @param $raw
+ *   Returns the rendered HTML without running hook_display_cache_post_render_alter.
+ *   Might be handy to interrupt infinite recursions. Only use, if you know what
+ *   you're doing.
+ * @return string
+ *   Rendered html.
+ */
+function display_cache_get_rendered_entity($entity_type, $entity_id, $view_mode, $reset = FALSE, $raw = FALSE) {
+
+  $cache_id = $entity_type . '--' . $entity_id . '--' . $view_mode;
+  if (!$reset) {
+    $cache_data = cache_get($cache_id, 'cache_display_cache');
+    if ($cache_data) {
+      $html = $cache_data->data;
+    }
+  }
+  if (!isset($html)) {
+    $html = _display_cache_render_entity($entity_type, $entity_id, $view_mode);
+    if (!empty($html)) {
+      cache_set($cache_id, $html, 'cache_display_cache');
+    }
+  }
+
+  if ($raw) {
+    return $html;
+  }
+
+  $context = array(
+    'entity_type' => $entity_type,
+    'entity_id' => $entity_id,
+    'view_mode' => $view_mode
+  );
+  drupal_alter('display_cache_post_render', $html, $context);
+
+  return $html;
+}
+
+/**
+ * Flushes the display cache of a given entity.
+ * @param $entity_type
+ *   Type like 'node' or 'comment'.
+ * @param $entity
+ *   Entity object or entity id.
+ *   Leave empty to flush all entities of given type.
+ * @param string $view_mode
+ *   View mode like 'full' or 'teaser'.
+ *   Leave empty to flush all view modes of given entity.
+ */
+function display_cache_flush_cache($entity_type, $entity = NULL, $view_mode = '') {
+  if (is_object($entity)) {
+    $entity_id = entity_id($entity_type, $entity);
+    $cache_id = $entity_type . '--' . $entity_id . '--' . $view_mode;
+  }
+  else if (is_numeric($entity)) {
+    $entity_id = $entity;
+    $cache_id = $entity_type . '--' . $entity_id . '--' . $view_mode;
+  }
+  else {
+    $cache_id = $entity_type . '--';
+  }
+
+  cache_clear_all($cache_id, 'cache_display_cache', TRUE);
+}
+
+
+/**
+ * Implements hook_entity_delete().
+ */
+function display_cache_entity_delete($entity, $entity_type) {
+  display_cache_flush_cache($entity_type, $entity);
+}
+
+
+/**
+ * Implements hook_entity_update().
+ */
+function display_cache_entity_update($entity, $entity_type) {
+  display_cache_flush_cache($entity_type, $entity);
+}
+
+/**
+ * Implements hook_ctools_plugin_pre_alter().
+ */
+function display_cache_ctools_plugin_pre_alter(&$plugin, &$info) {
+  if (variable_get('override_entity', 0) === DISPLAY_CACHE_ENTITY_OVERRIDE) {
+    // Alter content types provided by module Entity API to use the content
+    // types provided by display cache.
+    if (!empty($plugin['content type']) && $plugin['content type'] === 'entity_entity_view_content_type_info') {
+      module_load_include('inc', 'display_cache', 'plugins/content_types/display_cache_entity_view');
+      $plugin['title'] = 'Rendered Entity | Cached by Display Cache';
+      $plugin['content type'] = 'display_cache_entity_view_content_type_info';
+      $plugin['module'] = 'display_cache';
+      $plugin['name'] = 'display_cache_entity_view_override';
+      $plugin['path'] = drupal_get_path('module', 'display_cache') . '/plugins/content_types';
+      $plugin['file'] = 'display_cache_entity_view.inc';
+    }
+  }
+}
+
+
+/**
+ * Helper function to return an rendered entity with a given display mode.
+ * @param $entity_type
+ *   Type like 'node' or 'comment'.
+ * @param $entity_id
+ *   Entity object or entity id.
+ * @param $view_mode
+ *   View mode like 'full' or 'teaser'.
+ * @return string
+ *   Rendered html.
+ */
+function _display_cache_render_entity($entity_type, $entity_id, $view_mode) {
+  $html = '';
+  $entity = entity_load($entity_type, array($entity_id));
+  if ($entity) {
+    $render_array = entity_view($entity_type, $entity, $view_mode);
+
+    $context = array(
+      'entity_type' => $entity_type,
+      'entity_id' => $entity_id,
+      'view_mode' => $view_mode
+    );
+    drupal_alter('display_cache_pre_render', $render_array, $context);
+
+    $html = drupal_render($render_array[$entity_type][$entity_id]);
+  }
+  return $html;
+}
+
+/**
+ * Menu callback to clear the cache table.
+ */
+function _display_cache_flush_cache() {
+  cache_clear_all('*', 'cache_display_cache', TRUE);
+  drupal_goto($_GET['destination']);
+}
+
