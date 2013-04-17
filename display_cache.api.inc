@@ -33,7 +33,7 @@ function hook_display_cache_pre_render_alter(&$render_array, $context) {
  *   ['view_mode']  string
  *     View mode like 'full' or 'teaser'.
  */
-function hook_display_cache_post_cache(&$html, $context) {
+function hook_display_cache_post_render_alter(&$html, $context) {
 
 }
 
