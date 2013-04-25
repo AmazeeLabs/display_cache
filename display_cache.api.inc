@@ -5,6 +5,11 @@
  */
 
 /**
+ * @addtogroup hooks
+ * @{
+ */
+
+/**
  * Runs before an entity is rendered and cached.
  *
  * Usage example: Manipulate the renderable array.
@@ -74,3 +79,7 @@ function hook_display_cache_post_render_alter(&$html, $context) {
 function hook_display_cache_get_cid_alter(&$cid, $context) {
 
 }
+
+/**
+ * @} End of "addtogroup hooks".
+ */

@@ -85,8 +85,8 @@ function display_cache_ctools_plugin_directory($module, $plugin) {
  *   View mode like 'full' or 'teaser'.
  *
  * @param array $roles
- *   (optional) Array with machine readable names like 'anonymous user'. Use to build a
- *   role aware cache entry.
+ *   (optional) Array with machine readable names like 'anonymous user'. Use to
+ *   build a role aware cache entry.
  *
  * @param bool $reset
  *   (optional) Resets the cache while rendering.
@@ -196,7 +196,6 @@ function display_cache_get_cid($entity_type, $entity = NULL, $view_mode = NULL, 
  *
  * @return string
  *   The string with max size of 32 characters.
- *
  */
 function _display_cache_limit_key_length($key) {
   if (strlen($key) > 32) {
@@ -310,4 +309,3 @@ function _display_cache_flush_cache() {
   cache_clear_all('*', 'cache_display_cache', TRUE);
   drupal_goto($_GET['destination']);
 }
-
