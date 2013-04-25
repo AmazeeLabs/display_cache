@@ -7,7 +7,7 @@
 
 $plugin = array(
   'title' => t('Display Cache: Rendered entity'),
-  'defaults' => array('view_mode' => 'full'),
+  'defaults' => array('view_mode' => 'full', 'cache_by_role' => 0),
   'content type' => 'display_cache_entity_view_content_type_info',
 
 );
@@ -72,7 +72,16 @@ function display_cache_display_cache_entity_view_content_type_edit_form($form, &
       '#type' => 'value',
       '#value' => $options ? key($options) : 'default',
     );
+
   }
+
+  $form['cache_by_role'] = array(
+    '#title' => t('Cache by role'),
+    '#type' => 'checkbox',
+    '#description' => t('If checked this entity will create a separate cache
+    entry for each role.'),
+    '#default_value' => $conf['cache_by_role'],
+  );
 
   return $form;
 }
@@ -90,6 +99,9 @@ function display_cache_display_cache_entity_view_override_content_type_edit_form
 function display_cache_display_cache_entity_view_content_type_edit_form_submit(&$form, &$form_state) {
   if (isset($form_state['values']['view_mode'])) {
     $form_state['conf']['view_mode'] = $form_state['values']['view_mode'];
+  }
+  if (isset($form_state['values']['cache_by_role'])) {
+    $form_state['conf']['cache_by_role'] = $form_state['values']['cache_by_role'];
   }
 }
 
@@ -113,7 +125,14 @@ function display_cache_display_cache_entity_view_content_type_render($entity_typ
   $block->delta = $entity_type . '-' . str_replace('-', '_', $conf['view_mode']);
 
   $entity_id = $context->argument;
-  $block->content = display_cache_get_rendered_entity($entity_type, $entity_id, $conf['view_mode']);
+
+  $roles = NULL;
+  if ($conf['cache_by_role']) {
+    global $user;
+    $roles = $user->roles;
+  }
+
+  $block->content = display_cache_get_rendered_entity($entity_type, $entity_id, $conf['view_mode'], $roles);
   return $block;
 }
 

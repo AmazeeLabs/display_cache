@@ -13,8 +13,9 @@ class display_cache_views_handler_field_entity extends entity_views_handler_fiel
 
 
   public function option_definition() {
-    $options = parent::option_definition();
+    $options = views_handler_field::option_definition();
     $options['view_mode'] = array('default' => 'default');
+    $options['cache_by_role'] = array('default' => FALSE, 'bool' => TRUE);
     return $options;
   }
 
@@ -46,13 +47,27 @@ class display_cache_views_handler_field_entity extends entity_views_handler_fiel
         '#value' => $options ? key($options) : 'default',
       );
     }
+
+    $form['cache_by_role'] = array(
+      '#title' => t('Cache by role'),
+      '#type' => 'checkbox',
+      '#description' => t('If checked this entity will create a separate cache
+    entry for each role.'),
+      '#default_value' => $this->options['cache_by_role'],
+    );
   }
 
   // Render entity using display cache.
   public function render($values) {
+
     $entity_type = $this->field_entity_type;
     $entity_id = $values->{$this->field_alias};
     $view_mode = $this->options['view_mode'];
-    return display_cache_get_rendered_entity($entity_type, $entity_id, $view_mode);
+    $roles = NULL;
+    if ($this->options['cache_by_role']) {
+      global $user;
+      $roles = $user->roles;
+    }
+    return display_cache_get_rendered_entity($entity_type, $entity_id, $view_mode, $roles);
   }
 }

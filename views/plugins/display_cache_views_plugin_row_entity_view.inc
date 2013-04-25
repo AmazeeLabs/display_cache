@@ -6,11 +6,32 @@
  */
 
 /**
- * Plugin class for displaying Views results with display_cache_get_rendered_entity().
+ * Plugin class for displaying Views results with
+ * display_cache_get_rendered_entity().
  */
 class display_cache_views_plugin_row_entity_view extends entity_views_plugin_row_entity_view {
 
   public $rendered_content;
+
+  public function option_definition() {
+    $options = parent::option_definition();
+    $options['cache_by_role'] = array('default' => FALSE, 'bool' => TRUE);
+    return $options;
+  }
+
+  public function options_form(&$form, &$form_state) {
+    parent::options_form($form, $form_state);
+
+    $form['cache_by_role'] = array(
+      '#title' => t('Cache by role'),
+      '#type' => 'checkbox',
+      '#description' => t('If checked this entity will create a separate cache
+    entry for each role.'),
+      '#default_value' => $this->options['cache_by_role'],
+    );
+
+    return $form;
+  }
 
   public function pre_render($values) {
 
@@ -23,7 +44,15 @@ class display_cache_views_plugin_row_entity_view extends entity_views_plugin_row
 
       foreach ($this->entities as $entity) {
         $entity_id = entity_id($this->entity_type, $entity);
-        $this->rendered_content[$entity_id] = display_cache_get_rendered_entity($this->entity_type, $entity_id, $this->options['view_mode']);
+        $entity_type = $this->entity_type;
+        $view_mode = $this->options['view_mode'];
+        $roles = NULL;
+        if ($this->options['cache_by_role']) {
+          global $user;
+          $roles = $user->roles;
+        }
+
+        $this->rendered_content[$entity_id] = display_cache_get_rendered_entity($entity_type, $entity_id, $view_mode, $roles);
       }
     }
   }

@@ -73,26 +73,34 @@ function display_cache_ctools_plugin_directory($module, $plugin) {
 }
 
 /**
- * Main function that return the html for a given entity with a specific display mode.
- * The function get the content from cache and if no content in cache write it to the cache for the next time.
+ * Main function that return the html for a given entity with a specific display
+ * mode.
+ * The function get the content from cache and if no content in cache write it
+ * to the cache for the next time.
+ *
  * @param $entity_type
  *   Type like 'node' or 'comment'.
  * @param $entity_id
  *   The entity id like the node id.
  * @param $view_mode
  *   View mode like 'full' or 'teaser'.
+ * @param array $roles
+ *   Array with machine readable names like 'anonymous user'. Use to build a
+ *   role aware cache entry.
  * @param $reset
  *   Resets the cache while rendering.
  * @param $raw
- *   Returns the rendered HTML without running hook_display_cache_post_render_alter.
+ *   Returns the rendered HTML without running
+ *   hook_display_cache_post_render_alter.
  *   Might be handy to interrupt infinite recursions. Only use, if you know what
  *   you're doing.
  * @return string
  *   Rendered html.
  */
-function display_cache_get_rendered_entity($entity_type, $entity_id, $view_mode, $reset = FALSE, $raw = FALSE) {
+function display_cache_get_rendered_entity($entity_type, $entity_id, $view_mode, $roles = NULL, $reset = FALSE, $raw = FALSE) {
 
-  $cache_id = $entity_type . '--' . $entity_id . '--' . $view_mode;
+  $cache_id = display_cache_get_cid($entity_type, $entity_id, $view_mode, $roles);
+
   if (!$reset) {
     $cache_data = cache_get($cache_id, 'cache_display_cache');
     if ($cache_data) {
@@ -113,7 +121,8 @@ function display_cache_get_rendered_entity($entity_type, $entity_id, $view_mode,
   $context = array(
     'entity_type' => $entity_type,
     'entity_id' => $entity_id,
-    'view_mode' => $view_mode
+    'view_mode' => $view_mode,
+    'roles' => $roles,
   );
   drupal_alter('display_cache_post_render', $html, $context);
 
@@ -121,7 +130,72 @@ function display_cache_get_rendered_entity($entity_type, $entity_id, $view_mode,
 }
 
 /**
- * Flushes the display cache of a given entity.
+ * Returns the cache id (CID). The CID is a chain of all given arguments.
+ *
+ * If one argument is missing all following arguments will be ignored.
+ *
+ * @param $entity_type
+ *   Type like 'node' or 'comment'.
+ * @param int, object $entity
+ *   Entity id or entity object.
+ * @param string $view_mode
+ *   View mode like 'full' or 'teaser'.
+ * @param array $roles
+ *   Array with machine readable names like 'anonymous user'.
+ */
+function display_cache_get_cid($entity_type, $entity = NULL, $view_mode = NULL, $roles = NULL) {
+  $entity_type = _display_cache_limit_key_length($entity_type);
+
+  $cache_id = $entity_type;
+
+  if ($entity) {
+    if (is_object($entity)) {
+      $entity = entity_id($entity_type, $entity);
+    }
+    $cache_id .= '--' . $entity;
+    if ($view_mode) {
+      $view_mode = _display_cache_limit_key_length($view_mode);
+      $cache_id .= '--' . $view_mode;
+      if ($roles) {
+        sort($roles);
+        $role_ids = array();
+        foreach ($roles as $role) {
+          $role_id = user_role_load_by_name($role);
+          $role_ids[] = $role_id->rid;
+        }
+        $cache_id .= '--' . implode('_', $role_ids);
+      }
+    }
+  }
+
+  $context = array(
+    'entity_type' => $entity_type,
+    'entity_id' => $entity,
+    'view_mode' => $view_mode,
+    'roles' => $roles,
+  );
+  drupal_alter('display_cache_get_cid', $cache_id, $context);
+
+  return $cache_id;
+}
+
+/**
+ * Helper function to return a string with max size of 32 characters.
+ *
+ * @param string $key
+ * @return string
+ */
+function _display_cache_limit_key_length($key) {
+  if (strlen($key) > 32) {
+    $key = md5($key);
+  }
+  return $key;
+}
+
+/**
+ * Flushes the display cache of a given entity. If one argument is missing, all
+ * following arguments will be ignored.
+ *
  * @param $entity_type
  *   Type like 'node' or 'comment'.
  * @param $entity
@@ -130,20 +204,11 @@ function display_cache_get_rendered_entity($entity_type, $entity_id, $view_mode,
  * @param string $view_mode
  *   View mode like 'full' or 'teaser'.
  *   Leave empty to flush all view modes of given entity.
+ * @param array $roles
+ *   Array with machine readable names like 'anonymous user'.
  */
-function display_cache_flush_cache($entity_type, $entity = NULL, $view_mode = '') {
-  if (is_object($entity)) {
-    $entity_id = entity_id($entity_type, $entity);
-    $cache_id = $entity_type . '--' . $entity_id . '--' . $view_mode;
-  }
-  else if (is_numeric($entity)) {
-    $entity_id = $entity;
-    $cache_id = $entity_type . '--' . $entity_id . '--' . $view_mode;
-  }
-  else {
-    $cache_id = $entity_type . '--';
-  }
-
+function display_cache_flush_cache($entity_type, $entity = NULL, $view_mode = NULL, $roles = NULL) {
+  $cache_id = display_cache_get_cid($entity_type, $entity, $view_mode, $roles);
   cache_clear_all($cache_id, 'cache_display_cache', TRUE);
 }
 
@@ -185,6 +250,7 @@ function display_cache_ctools_plugin_pre_alter(&$plugin, &$info) {
 
 /**
  * Helper function to return an rendered entity with a given display mode.
+ *
  * @param $entity_type
  *   Type like 'node' or 'comment'.
  * @param $entity_id
@@ -194,7 +260,7 @@ function display_cache_ctools_plugin_pre_alter(&$plugin, &$info) {
  * @return string
  *   Rendered html.
  */
-function _display_cache_render_entity($entity_type, $entity_id, $view_mode) {
+function _display_cache_render_entity($entity_type, $entity_id, $view_mode, $roles = NULL) {
   $html = '';
   $entity = entity_load($entity_type, array($entity_id));
   if ($entity) {
@@ -203,8 +269,10 @@ function _display_cache_render_entity($entity_type, $entity_id, $view_mode) {
     $context = array(
       'entity_type' => $entity_type,
       'entity_id' => $entity_id,
-      'view_mode' => $view_mode
+      'view_mode' => $view_mode,
+      'roles' => $roles,
     );
+
     drupal_alter('display_cache_pre_render', $render_array, $context);
 
     $html = drupal_render($render_array[$entity_type][$entity_id]);
