@@ -12,13 +12,13 @@
  */
 function display_cache_settings_form($form, $form_state) {
   $active = array(
-    0 => t('No overrides'),
-    1 => t('Override Entity API'),
+    DISPLAY_CACHE_NO_OVERRIDE => t('No overrides'),
+    DISPLAY_CACHE_ENTITY_OVERRIDE => t('Override Entity API'),
   );
   $form['display_cache_override_entity'] = array(
     '#type' => 'radios',
     '#title' => t('Override Entity'),
-    '#default_value' => variable_get('override_entity', 0),
+    '#default_value' => variable_get('display_cache_override_entity', DISPLAY_CACHE_NO_OVERRIDE),
     '#options' => $active,
     '#description' => t('<em>Display Cache</em> will add content panes and views
     plugins to provide cached displays in views and panels. If <em>Override

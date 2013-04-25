@@ -12,7 +12,7 @@
  */
 function display_cache_views_plugins() {
   // Have views cache the table list for us so it gets cleared at the
-  //appropriate times.
+  // appropriate times.
   $data = views_cache_get('entity_base_tables', TRUE);
   if (!empty($data->data)) {
     $base_tables = $data->data;
@@ -48,7 +48,7 @@ function display_cache_views_plugins() {
 }
 
 /**
- * Implements hook_views_plugins_alter()
+ * Implements hook_views_plugins_alter().
  *
  * Implemented to override plugins provided by Entity API with display cache.
  */
@@ -105,6 +105,9 @@ function display_cache_views_data() {
   return $data;
 }
 
+/**
+ * Implements hook_entity_views_field_handlers_alter().
+ */
 function display_cache_entity_views_field_handlers_alter(&$field_handlers) {
   if (variable_get('override_entity', 0) === DISPLAY_CACHE_ENTITY_OVERRIDE) {
     $field_handlers['entity'] = 'DisplayCacheViewsHandlerFieldEntity';
@@ -112,7 +115,7 @@ function display_cache_entity_views_field_handlers_alter(&$field_handlers) {
 }
 
 /**
- * Implements hook_views_data_alter()
+ * Implements hook_views_data_alter().
  *
  * Implemented to override plugins provided by Entity API with display cache.
  */
@@ -133,4 +136,3 @@ function display_cache_views_data_alter(&$data) {
     }
   }
 }
-

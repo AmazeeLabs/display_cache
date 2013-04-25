@@ -77,24 +77,28 @@ function display_cache_ctools_plugin_directory($module, $plugin) {
  *
  * @param string $entity_type
  *   Type like 'node' or 'comment'.
- * @param int, object $entity_id
+ *
+ * @param int|object $entity_id
  *   The entity id like the node id.
+ *
  * @param string $view_mode
  *   View mode like 'full' or 'teaser'.
+ *
  * @param array $roles
- *   Array with machine readable names like 'anonymous user'. Use to build a
+ *   (optional) Array with machine readable names like 'anonymous user'. Use to build a
  *   role aware cache entry.
+ *
  * @param bool $reset
- *   Resets the cache while rendering.
+ *   (optional) Resets the cache while rendering.
+ *
  * @param bool $raw
- *   Returns the rendered HTML without running
+ *   (optional) Returns the rendered HTML without running
  *   hook_display_cache_post_render_alter.
  *   Might be handy to interrupt infinite recursions. Only use, if you know what
  *   you're doing.
  *
  * @return string
  *   Rendered html.
- *
  */
 function display_cache_get_rendered_entity($entity_type, $entity_id, $view_mode, $roles = NULL, $reset = FALSE, $raw = FALSE) {
 
@@ -135,16 +139,18 @@ function display_cache_get_rendered_entity($entity_type, $entity_id, $view_mode,
  *
  * @param string $entity_type
  *   Type like 'node' or 'comment'.
- * @param int, object $entity
+ *
+ * @param int|object $entity
  *   Entity id or entity object.
+ *
  * @param string $view_mode
- *   View mode like 'full' or 'teaser'.
+ *   (optional) View mode like 'full' or 'teaser'.
+ *
  * @param array $roles
- *   Array with machine readable names like 'anonymous user'.
+ *   (optional) Array with machine readable names like 'anonymous user'.
  *
  * @return string
  *   The cache id.
- *
  */
 function display_cache_get_cid($entity_type, $entity = NULL, $view_mode = NULL, $roles = NULL) {
   $entity_type = _display_cache_limit_key_length($entity_type);
@@ -187,6 +193,7 @@ function display_cache_get_cid($entity_type, $entity = NULL, $view_mode = NULL, 
  *
  * @param string $key
  *   String to limit length.
+ *
  * @return string
  *   The string with max size of 32 characters.
  *
@@ -205,15 +212,17 @@ function _display_cache_limit_key_length($key) {
  *
  * @param string $entity_type
  *   Type like 'node' or 'comment'.
- * @param in, object $entity
- *   Entity object or entity id.
- *   Leave empty to flush all entities of given type.
- * @param string $view_mode
- *   View mode like 'full' or 'teaser'.
- *   Leave empty to flush all view modes of given entity.
- * @param array $roles
- *   Array with machine readable names like 'anonymous user'.
  *
+ * @param int|object $entity
+ *   (optional) Entity object or entity id.
+ *   Leave empty to flush all entities of given type.
+ *
+ * @param string $view_mode
+ *   (optional) View mode like 'full' or 'teaser'.
+ *   Leave empty to flush all view modes of given entity.
+ *
+ * @param array $roles
+ *   (optional) Array with machine readable names like 'anonymous user'.
  */
 function display_cache_flush_cache($entity_type, $entity = NULL, $view_mode = NULL, $roles = NULL) {
   $cache_id = display_cache_get_cid($entity_type, $entity, $view_mode, $roles);
@@ -261,14 +270,18 @@ function display_cache_ctools_plugin_pre_alter(&$plugin, &$info) {
  *
  * @param string $entity_type
  *   Type like 'node' or 'comment'.
- * @param int, object $entity_id
+ *
+ * @param int|object $entity_id
  *   Entity object or entity id.
+ *
  * @param string $view_mode
  *   View mode like 'full' or 'teaser'.
  *
+ * @param array $roles
+ *   (optional) Array with machine readable names like 'anonymous user'.
+ *
  * @return string
  *   Rendered html.
- *
  */
 function _display_cache_render_entity($entity_type, $entity_id, $view_mode, $roles = NULL) {
   $html = '';

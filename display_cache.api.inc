@@ -11,17 +11,18 @@
  *
  * @param array $render_array
  *   The rendarable array of an entity.
+ *
  * @param array $context
- *   ['entity_type'] string
+ *   Contains context variables:
+ *   string ['entity_type']
  *     The entity type like 'node'.
- *   ['entity_id'] int
+ *   int ['entity_id']
  *     The entity id.
- *   ['view_mode']  string
+ *   string ['view_mode']
  *     View mode like 'full' or 'teaser'.
- *   ['roles']  array
+ *   array ['roles']
  *     Array of machine readable names of roles. NULL if role awareness is
  *     deactivated.
- *
  */
 function hook_display_cache_pre_render_alter(&$render_array, $context) {
 
@@ -34,17 +35,18 @@ function hook_display_cache_pre_render_alter(&$render_array, $context) {
  *
  * @param string $html
  *   HTML of the rendered entity.
+ *
  * @param array $context
- *   ['entity_type'] string
+ *   Contains context variables:
+ *   string ['entity_type']
  *     The entity type like 'node'.
- *   ['entity_id'] int
+ *   int ['entity_id']
  *     The entity id.
- *   ['view_mode']  string
+ *   string ['view_mode']
  *     View mode like 'full' or 'teaser'.
- *   ['roles']  array
+ *   array ['roles']
  *     Array of machine readable names of roles. NULL if role awareness is
  *     deactivated.
- *
  */
 function hook_display_cache_post_render_alter(&$html, $context) {
 
@@ -56,17 +58,18 @@ function hook_display_cache_post_render_alter(&$html, $context) {
  *
  * @param string $cid
  *   The actual cid.
+ *
  * @param array $context
- *   ['entity_type'] string
+ *   Contains context variables:
+ *   string ['entity_type']
  *     The entity type like 'node'.
- *   ['entity_id'] int
+ *   int ['entity_id']
  *     The entity id.
- *   ['view_mode']  string
+ *   string ['view_mode']
  *     View mode like 'full' or 'teaser'.
- *   ['roles']  array
+ *   array ['roles']
  *     Array of machine readable names of roles. NULL if role awareness is
  *     deactivated.
- *
  */
 function hook_display_cache_get_cid_alter(&$cid, $context) {
 
