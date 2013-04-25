@@ -1,12 +1,14 @@
 <?php
 /**
- * Api documentations.
+ * @file
+ * Hooks provided by the Display Cache module.
  */
 
 /**
  * Runs before an entity is rendered and cached.
  *
  * Usage example: Manipulate the renderable array.
+ *
  * @param array $render_array
  *   The rendarable array of an entity.
  * @param array $context
@@ -19,6 +21,7 @@
  *   ['roles']  array
  *     Array of machine readable names of roles. NULL if role awareness is
  *     deactivated.
+ *
  */
 function hook_display_cache_pre_render_alter(&$render_array, $context) {
 
@@ -28,6 +31,7 @@ function hook_display_cache_pre_render_alter(&$render_array, $context) {
  * Runs after a rendered entity was rendered.
  *
  * Usage example: Manipulate the rendered HTML or add JS with drupal_add_js.
+ *
  * @param string $html
  *   HTML of the rendered entity.
  * @param array $context
@@ -40,6 +44,7 @@ function hook_display_cache_pre_render_alter(&$render_array, $context) {
  *   ['roles']  array
  *     Array of machine readable names of roles. NULL if role awareness is
  *     deactivated.
+ *
  */
 function hook_display_cache_post_render_alter(&$html, $context) {
 
@@ -61,6 +66,7 @@ function hook_display_cache_post_render_alter(&$html, $context) {
  *   ['roles']  array
  *     Array of machine readable names of roles. NULL if role awareness is
  *     deactivated.
+ *
  */
 function hook_display_cache_get_cid_alter(&$cid, $context) {
 

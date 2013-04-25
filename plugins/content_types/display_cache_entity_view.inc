@@ -161,9 +161,13 @@ function display_cache_display_cache_entity_view_override_content_type_admin_tit
 
 /**
  * Returns available entities which supports entity_view().
+ *
  * @param bool $override
- *    Selects title for panes which are overridden.
+ *   Selects title for panes which are overridden.
+ *
  * @return array
+ *  Array of supported entities.
+ *
  */
 function _display_cache_get_types($override = FALSE) {
   $title_text = 'Display Cache: Rendered @entity_type';
@@ -189,13 +193,17 @@ function _display_cache_get_types($override = FALSE) {
 
 /**
  * Returns admin title for panes.
+ *
  * @param $entity_type
  *   Entity type like 'node' or 'comment'.
  * @param $view_mode
  *   View mode like 'full' or 'teaser'.
  * @param bool $override
  *   Selects title for panes which are overridden.
+ *
  * @return null|string
+ *   The admin title for panes.
+ *
  */
 function _display_cache_get_admin_title($entity_type, $view_mode, $override = FALSE) {
   $title_text = 'Display Cache: Rendered @entity_type using view mode "@view_mode"';

@@ -1,8 +1,12 @@
 <?php
 
 /**
- * Implements hook_schema.
- * @return array
+ * @file
+ * Schema and install hooks for the Display Cache module.
+ */
+
+/**
+ * Implements hook_schema().
  */
 function display_cache_schema() {
   $schema['cache_display_cache'] = drupal_get_schema_unprocessed('system', 'cache');

@@ -5,15 +5,17 @@
  */
 
 /**
+ * Display Cache settings form.
+ *
  * Returns a form to chose between no overrides and overrides of panels and
  * views plugins provided by the module Entity API.
  */
 function display_cache_settings_form($form, $form_state) {
   $active = array(
     0 => t('No overrides'),
-    1 => t('Override Entity API')
+    1 => t('Override Entity API'),
   );
-  $form['override_entity'] = array(
+  $form['display_cache_override_entity'] = array(
     '#type' => 'radios',
     '#title' => t('Override Entity'),
     '#default_value' => variable_get('override_entity', 0),

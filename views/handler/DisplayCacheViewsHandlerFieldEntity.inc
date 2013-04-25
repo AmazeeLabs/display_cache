@@ -9,9 +9,12 @@
  * A handler to provide proper displays for entities using display cache.
  * @ingroup views_field_handlers
  */
-class display_cache_views_handler_field_entity extends entity_views_handler_field_entity {
+class DisplayCacheViewsHandlerFieldEntity extends entity_views_handler_field_entity {
 
 
+  /**
+   * Returns option definitions.
+   */
   public function option_definition() {
     $options = views_handler_field::option_definition();
     $options['view_mode'] = array('default' => 'default');
@@ -19,7 +22,9 @@ class display_cache_views_handler_field_entity extends entity_views_handler_fiel
     return $options;
   }
 
-  // Overrides form.
+  /**
+   * Returns options form.
+   */
   public function options_form(&$form, &$form_state) {
     views_handler_field::options_form($form, $form_state);
 
@@ -57,7 +62,9 @@ class display_cache_views_handler_field_entity extends entity_views_handler_fiel
     );
   }
 
-  // Render entity using display cache.
+  /**
+   * Returns the rendered and cached entity.
+   */
   public function render($values) {
 
     $entity_type = $this->field_entity_type;

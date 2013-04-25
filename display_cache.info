@@ -5,5 +5,5 @@ core = "7.x"
 
 dependencies[] = entity
 
-files[] = views/plugins/display_cache_views_plugin_row_entity_view.inc
-files[] = views/handler/display_cache_views_handler_field_entity.inc
+files[] = views/plugins/DisplayCacheViewsPluginRowEntityView.inc
+files[] = views/handler/DisplayCacheViewsHandlerFieldEntity.inc
