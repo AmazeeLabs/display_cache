@@ -309,3 +309,17 @@ function _display_cache_flush_cache() {
   cache_clear_all('*', 'cache_display_cache', TRUE);
   drupal_goto($_GET['destination']);
 }
+
+/**
+ * Implements hook_comment_insert().
+ */
+function display_cache_comment_insert($comment) {
+  display_cache_flush_cache('node', $comment->nid);
+}
+
+/**
+ * Implements hook_comment_update().
+ */
+function display_cache_comment_update($comment) {
+  display_cache_flush_cache('node', $comment->nid);
+}
