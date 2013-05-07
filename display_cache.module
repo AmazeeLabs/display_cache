@@ -35,7 +35,7 @@ function display_cache_menu() {
   if (module_exists('admin_menu')) {
     $menu_items['admin_menu/flush-cache/display_cache'] = array(
       'page callback' => '_display_cache_flush_cache',
-      'access arguments' => array('administer'),
+      'access arguments' => array('flush caches'),
       'type' => MENU_CALLBACK,
     );
   }
@@ -43,14 +43,24 @@ function display_cache_menu() {
   // Menu item for configurations.
   $menu_items['admin/config/development/performance/display-cache'] = array(
     'title' => 'Display Cache Config',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('display_cache_settings_form'),
+    'page callback' => 'display_cache_settings_forms',
     'access arguments' => array('administer display cache'),
     'file' => 'display_cache.admin.inc',
     'type' => MENU_NORMAL_ITEM,
   );
 
   return $menu_items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function display_cache_permission() {
+  return array(
+    'administer display cache' => array(
+      'title' => 'Administer Display Cache',
+    ),
+  );
 }
 
 /**
