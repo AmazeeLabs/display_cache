@@ -127,7 +127,7 @@ function display_cache_display_cache_entity_view_content_type_render($entity_typ
   $entity_id = $context->argument;
 
   $roles = NULL;
-  if ($conf['cache_by_role']) {
+  if (!empty($conf['cache_by_role']) && $conf['cache_by_role']) {
     global $user;
     $roles = $user->roles;
   }

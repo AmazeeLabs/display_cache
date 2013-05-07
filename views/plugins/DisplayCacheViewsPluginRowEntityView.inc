@@ -56,7 +56,7 @@ class DisplayCacheViewsPluginRowEntityView extends entity_views_plugin_row_entit
         $entity_type = $this->entity_type;
         $view_mode = $this->options['view_mode'];
         $roles = NULL;
-        if ($this->options['cache_by_role']) {
+        if (!empty($this->options['cache_by_role']) && $this->options['cache_by_role']) {
           global $user;
           $roles = $user->roles;
         }
