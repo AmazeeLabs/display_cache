@@ -323,3 +323,10 @@ function display_cache_comment_insert($comment) {
 function display_cache_comment_update($comment) {
   display_cache_flush_cache('node', $comment->nid);
 }
+
+/**
+ * Implements hook_comment_update().
+ */
+function display_cache_comment_delete($comment) {
+  display_cache_flush_cache('node', $comment->nid);
+}
