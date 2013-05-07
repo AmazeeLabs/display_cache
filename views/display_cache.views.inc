@@ -53,7 +53,7 @@ function display_cache_views_plugins() {
  * Implemented to override plugins provided by Entity API with display cache.
  */
 function display_cache_views_plugins_alter(&$plugins) {
-  if (variable_get('override_entity', 0) === DISPLAY_CACHE_ENTITY_OVERRIDE) {
+  if (variable_get('display_cache_override_entity', DISPLAY_CACHE_NO_OVERRIDE) === DISPLAY_CACHE_ENTITY_OVERRIDE) {
     $plugins['row']['entity']['title']
       = t('Rendered entity | Cached by Display Cache');
 
@@ -109,7 +109,7 @@ function display_cache_views_data() {
  * Implements hook_entity_views_field_handlers_alter().
  */
 function display_cache_entity_views_field_handlers_alter(&$field_handlers) {
-  if (variable_get('override_entity', 0) === DISPLAY_CACHE_ENTITY_OVERRIDE) {
+  if (variable_get('display_cache_override_entity', DISPLAY_CACHE_NO_OVERRIDE) === DISPLAY_CACHE_ENTITY_OVERRIDE) {
     $field_handlers['entity'] = 'DisplayCacheViewsHandlerFieldEntity';
   }
 }
@@ -120,7 +120,7 @@ function display_cache_entity_views_field_handlers_alter(&$field_handlers) {
  * Implemented to override plugins provided by Entity API with display cache.
  */
 function display_cache_views_data_alter(&$data) {
-  if (variable_get('override_entity', 0) === DISPLAY_CACHE_ENTITY_OVERRIDE) {
+  if (variable_get('display_cache_override_entity', DISPLAY_CACHE_NO_OVERRIDE) === DISPLAY_CACHE_ENTITY_OVERRIDE) {
     foreach (entity_get_info() as $entity_type => $info) {
       if (entity_type_supports($entity_type, 'view')) {
 

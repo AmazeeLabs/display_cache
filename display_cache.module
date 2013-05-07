@@ -248,7 +248,7 @@ function display_cache_entity_update($entity, $entity_type) {
  * Implements hook_ctools_plugin_pre_alter().
  */
 function display_cache_ctools_plugin_pre_alter(&$plugin, &$info) {
-  if (variable_get('override_entity', 0) === DISPLAY_CACHE_ENTITY_OVERRIDE) {
+  if (variable_get('display_cache_override_entity', DISPLAY_CACHE_NO_OVERRIDE) === DISPLAY_CACHE_ENTITY_OVERRIDE) {
     // Alter content types provided by module Entity API to use the content
     // types provided by display cache.
     if (!empty($plugin['content type']) && $plugin['content type'] === 'entity_entity_view_content_type_info') {
