@@ -4,9 +4,9 @@
  * Module file for Display Cache.
  */
 
-define('DISPLAY_CACHE_NO_OVERRIDE', '0');
+define('DISPLAY_CACHE_DISABLED', '0');
 
-define('DISPLAY_CACHE_ENTITY_OVERRIDE', '1');
+define('DISPLAY_CACHE_ENABLED', '1');
 
 /**
  * Implements hook_flush_caches().
@@ -34,7 +34,7 @@ function display_cache_menu() {
   // Menu item to provide flush cache via admin_menu.
   if (module_exists('admin_menu')) {
     $menu_items['admin_menu/flush-cache/display_cache'] = array(
-      'page callback' => '_display_cache_flush_cache',
+      'page callback' => '_display_cache_flush_cache_callback',
       'access arguments' => array('flush caches'),
       'type' => MENU_CALLBACK,
     );
@@ -64,157 +64,6 @@ function display_cache_permission() {
 }
 
 /**
- * Implements hook_views_api().
- */
-function display_cache_views_api() {
-  return array(
-    'api' => 3,
-    'path' => drupal_get_path('module', 'display_cache') . '/views',
-  );
-}
-
-/**
- * Implements hook_ctools_plugin_directory().
- */
-function display_cache_ctools_plugin_directory($module, $plugin) {
-  if ($module == 'ctools' && $plugin === 'content_types') {
-    return "plugins/$plugin";
-  }
-}
-
-/**
- * Main function of Display Cache. Returns the cached html of given entity.
- *
- * @param string $entity_type
- *   Type like 'node' or 'comment'.
- *
- * @param int|object $entity_id
- *   The entity id like the node id.
- *
- * @param string $view_mode
- *   View mode like 'full' or 'teaser'.
- *
- * @param array $roles
- *   (optional) Array with machine readable names like 'anonymous user'. Use to
- *   build a role aware cache entry.
- *
- * @param bool $reset
- *   (optional) Resets the cache while rendering.
- *
- * @param bool $raw
- *   (optional) Returns the rendered HTML without running
- *   hook_display_cache_post_render_alter.
- *   Might be handy to interrupt infinite recursions. Only use, if you know what
- *   you're doing.
- *
- * @return string
- *   Rendered html.
- */
-function display_cache_get_rendered_entity($entity_type, $entity_id, $view_mode, $roles = NULL, $reset = FALSE, $raw = FALSE) {
-
-  $cache_id = display_cache_get_cid($entity_type, $entity_id, $view_mode, $roles);
-
-  if (!$reset) {
-    $cache_data = cache_get($cache_id, 'cache_display_cache');
-    if ($cache_data) {
-      $html = $cache_data->data;
-    }
-  }
-  if (!isset($html)) {
-    $html = _display_cache_render_entity($entity_type, $entity_id, $view_mode);
-    if (!empty($html)) {
-      cache_set($cache_id, $html, 'cache_display_cache');
-    }
-  }
-
-  if ($raw) {
-    return $html;
-  }
-
-  $context = array(
-    'entity_type' => $entity_type,
-    'entity_id' => $entity_id,
-    'view_mode' => $view_mode,
-    'roles' => $roles,
-  );
-  drupal_alter('display_cache_post_render', $html, $context);
-
-  return $html;
-}
-
-/**
- * Returns the cache id (CID). The CID is a chain of all given arguments.
- *
- * If one argument is missing all following arguments will be ignored.
- *
- * @param string $entity_type
- *   Type like 'node' or 'comment'.
- *
- * @param int|object $entity
- *   Entity id or entity object.
- *
- * @param string $view_mode
- *   (optional) View mode like 'full' or 'teaser'.
- *
- * @param array $roles
- *   (optional) Array with machine readable names like 'anonymous user'.
- *
- * @return string
- *   The cache id.
- */
-function display_cache_get_cid($entity_type, $entity = NULL, $view_mode = NULL, $roles = NULL) {
-  $entity_type = _display_cache_limit_key_length($entity_type);
-
-  $cache_id = $entity_type;
-
-  if ($entity) {
-    if (is_object($entity)) {
-      $entity = entity_id($entity_type, $entity);
-    }
-    $cache_id .= '--' . $entity;
-    if ($view_mode) {
-      $view_mode = _display_cache_limit_key_length($view_mode);
-      $cache_id .= '--' . $view_mode;
-      if ($roles) {
-        sort($roles);
-        $role_ids = array();
-        foreach ($roles as $role) {
-          $role_id = user_role_load_by_name($role);
-          $role_ids[] = $role_id->rid;
-        }
-        $cache_id .= '--' . implode('_', $role_ids);
-      }
-    }
-  }
-
-  $context = array(
-    'entity_type' => $entity_type,
-    'entity_id' => $entity,
-    'view_mode' => $view_mode,
-    'roles' => $roles,
-  );
-  drupal_alter('display_cache_get_cid', $cache_id, $context);
-
-  return $cache_id;
-}
-
-/**
- * Helper function to return a string with max size of 32 characters.
- *
- * @param string $key
- *   String to limit length.
- *
- * @return string
- *   The string with max size of 32 characters.
- */
-function _display_cache_limit_key_length($key) {
-  if (strlen($key) > 32) {
-    $key = md5($key);
-  }
-  return $key;
-}
-
-/**
  * Flushes the display cache of a given entity.
  *
  * If one argument is missing, all following arguments will be ignored.
@@ -229,15 +78,69 @@ function _display_cache_limit_key_length($key) {
  * @param string $view_mode
  *   (optional) View mode like 'full' or 'teaser'.
  *   Leave empty to flush all view modes of given entity.
- *
- * @param array $roles
- *   (optional) Array with machine readable names like 'anonymous user'.
  */
-function display_cache_flush_cache($entity_type, $entity = NULL, $view_mode = NULL, $roles = NULL) {
-  $cache_id = display_cache_get_cid($entity_type, $entity, $view_mode, $roles);
+function display_cache_flush_cache($entity_type, $entity = NULL, $view_mode = NULL) {
+
+  if (is_object($entity)) {
+    $entity = entity_id($entity_type, $entity);
+  }
+
+  $cache_id = _display_cache_get_cid($entity_type, $entity, $view_mode);
   cache_clear_all($cache_id, 'cache_display_cache', TRUE);
 }
 
+/**
+ * Returns a cache id.
+ *
+ * @param string $entity_type
+ *   Type like 'node' or 'comment'.
+ *
+ * @param int $entity_id
+ *   (optional) The entity id.
+ *
+ * @param string $view_mode
+ *   (optional) View mode like 'full' or 'teaser'.
+ *
+ * @return string
+ *   The cache id.
+ */
+function _display_cache_get_cid($entity_type, $entity_id = NULL, $view_mode = NULL) {
+  $keys = _display_cache_get_cache_keys($entity_type, $entity_id, $view_mode);
+  return implode(':', $keys);
+}
+
+/**
+ * Returns an array of keys to build a cache id.
+ *
+ * @param string $entity_type
+ *   Type like 'node' or 'comment'.
+ *
+ * @param int $entity_id
+ *   (optional) The entity id.
+ *
+ * @param string $view_mode
+ *   (optional) View mode like 'full' or 'teaser'.
+ *
+ * @return array
+ *   The array of keys to build a cache id.
+ */
+function _display_cache_get_cache_keys($entity_type, $entity_id = NULL, $view_mode = NULL) {
+  $settings = array();
+
+  $keys = array($entity_type);
+
+  if (!empty($entity_id)) {
+    $keys[] = $entity_id;
+    if (!empty($view_mode)) {
+      $keys[] = $view_mode;
+      $settings = display_cache_get_settings($entity_type, $view_mode);
+    }
+  }
+
+  drupal_alter('display_cache_cache_keys', $keys, $entity_type, $entity_id, $view_mode, $settings);
+
+  return $keys;
+}
 
 /**
  * Implements hook_entity_delete().
@@ -254,89 +157,141 @@ function display_cache_entity_update($entity, $entity_type) {
   display_cache_flush_cache($entity_type, $entity);
 }
 
-/**
- * Implements hook_ctools_plugin_pre_alter().
- */
-function display_cache_ctools_plugin_pre_alter(&$plugin, &$info) {
-  if (variable_get('display_cache_override_entity', DISPLAY_CACHE_NO_OVERRIDE) === DISPLAY_CACHE_ENTITY_OVERRIDE) {
-    // Alter content types provided by module Entity API to use the content
-    // types provided by display cache.
-    if (!empty($plugin['content type']) && $plugin['content type'] === 'entity_entity_view_content_type_info') {
-      module_load_include('inc', 'display_cache', 'plugins/content_types/display_cache_entity_view');
-      $plugin['title'] = 'Rendered Entity | Cached by Display Cache';
-      $plugin['content type'] = 'display_cache_entity_view_content_type_info';
-      $plugin['module'] = 'display_cache';
-      $plugin['name'] = 'display_cache_entity_view_override';
-      $plugin['path'] = drupal_get_path('module', 'display_cache') . '/plugins/content_types';
-      $plugin['file'] = 'display_cache_entity_view.inc';
-    }
-  }
-}
-
-
-/**
- * Helper function to return an rendered entity with a given display mode.
- *
- * @param string $entity_type
- *   Type like 'node' or 'comment'.
- *
- * @param int|object $entity_id
- *   Entity object or entity id.
- *
- * @param string $view_mode
- *   View mode like 'full' or 'teaser'.
- *
- * @param array $roles
- *   (optional) Array with machine readable names like 'anonymous user'.
- *
- * @return string
- *   Rendered html.
- */
-function _display_cache_render_entity($entity_type, $entity_id, $view_mode, $roles = NULL) {
-  $html = '';
-  $entity = entity_load($entity_type, array($entity_id));
-  if ($entity) {
-    $render_array = entity_view($entity_type, $entity, $view_mode);
-
-    $context = array(
-      'entity_type' => $entity_type,
-      'entity_id' => $entity_id,
-      'view_mode' => $view_mode,
-      'roles' => $roles,
-    );
-
-    drupal_alter('display_cache_pre_render', $render_array, $context);
-
-    $html = drupal_render($render_array[$entity_type][$entity_id]);
-  }
-  return $html;
-}
 
 /**
  * Menu callback to clear the cache table.
  */
-function _display_cache_flush_cache() {
+function _display_cache_flush_cache_callback() {
   cache_clear_all('*', 'cache_display_cache', TRUE);
   drupal_goto($_GET['destination']);
 }
 
 /**
- * Implements hook_comment_insert().
+ * Implements hook_entity_view_alter().
  */
-function display_cache_comment_insert($comment) {
-  display_cache_flush_cache('node', $comment->nid);
+function display_cache_entity_view_alter(&$build, $entity_type) {
+  $entity_id = entity_id($entity_type, $build['#' . $entity_type]);
+  $view_mode = $build['#view_mode'];
+
+  $settings = display_cache_get_settings($entity_type, $view_mode);
+
+  $keys = _display_cache_get_cache_keys($entity_type, $entity_id, $view_mode);
+
+  if ($settings['use'] === DISPLAY_CACHE_ENABLED) {
+    $build['#cache'] = array(
+      'keys' => $keys,
+      'bin' => 'cache_display_cache',
+      'granularity' => $settings['granularity'],
+    );
+  }
 }
 
 /**
- * Implements hook_comment_update().
+ * Returns the display cache settings for given entity type and view mode.
+ *
+ * @param string $entity_type
+ *   The entity type like 'node' or 'comment'.
+ *
+ * @param string $view_mode
+ *   View mode like 'full' or 'teaser'.
  */
-function display_cache_comment_update($comment) {
-  display_cache_flush_cache('node', $comment->nid);
+function display_cache_get_settings($entity_type, $view_mode) {
+
+  $settings = variable_get('display_cache_' . $entity_type . '_' . $view_mode, FALSE);
+
+  if (!$settings && $view_mode !== 'default') {
+    $settings = display_cache_get_settings($entity_type, 'default');
+    if (!$settings) {
+      return array(
+        'use' => DISPLAY_CACHE_DISABLED,
+        'page_granularity' => DISPLAY_CACHE_DISABLED,
+        'user_granularity' => DISPLAY_CACHE_DISABLED,
+        'granularity' => DISPLAY_CACHE_DISABLED,
+      );
+    }
+  }
+  return $settings;
 }
 
 /**
- * Implements hook_comment_update().
+ * Implements hook_form_FORM_ID_alter().
  */
-function display_cache_comment_delete($comment) {
-  display_cache_flush_cache('node', $comment->nid);
+function display_cache_form_field_ui_display_overview_form_alter(&$form, &$form_stats) {
+
+  $entity_type = $form['#entity_type'];
+  $view_mode = $form['#view_mode'];
+
+  $settings = display_cache_get_settings($entity_type, $view_mode);
+
+  $form['display_cache'] = array(
+    '#title' => t('Display Cache Settings'),
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#access' => user_access('administer display cache'),
+  );
+
+  $form['display_cache']['display_cache_use'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Cache the rendered HTML of this view mode.'),
+    '#default_value' => $settings['use'],
+    '#return_value' => DISPLAY_CACHE_ENABLED,
+  );
+
+  $form['display_cache']['display_cache_page_granularity'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Cache per URL'),
+    '#default_value' => $settings['page_granularity'],
+    '#return_value' => DRUPAL_CACHE_PER_PAGE,
+    '#states' => array(
+      'invisible' => array(
+        ':input[name="display_cache_use"]' => array('checked' => FALSE),
+      ),
+    ),
+  );
+
+  $user_granularity_options = array(
+    0 => t('No user granularity'),
+    DRUPAL_CACHE_PER_ROLE => t('Cache per role'),
+    DRUPAL_CACHE_PER_USER => t('Cache per user'),
+  );
+
+  $form['display_cache']['display_cache_user_granularity'] = array(
+    '#type' => 'radios',
+    '#title' => t('User granularity'),
+    '#default_value' => $settings['user_granularity'],
+    '#options' => $user_granularity_options,
+    '#states' => array(
+      'invisible' => array(
+        ':input[name="display_cache_use"]' => array('checked' => FALSE),
+      ),
+    ),
+  );
+
+  $form['#submit'][] = 'display_cache_view_mode_settings_form_submit';
+}
+
+/**
+ * Submit handler for display cache settings form.
+ *
+ * @see display_cache_form_field_ui_display_overview_form_alter()
+ */
+function display_cache_view_mode_settings_form_submit($form, $form_state) {
+
+  $values = $form_state['values'];
+
+  $page_granularity = $values['display_cache_page_granularity'];
+  $user_granularity = $values['display_cache_user_granularity'];
+
+  $settings = array(
+    'use' => $values['display_cache_use'],
+    'page_granularity' => $page_granularity,
+    'user_granularity' => $user_granularity,
+    'granularity' => $page_granularity + $user_granularity,
+  );
+
+  $entity_type = $form['#entity_type'];
+  $view_mode = $form['#view_mode'];
+
+  variable_set('display_cache_' . $entity_type . '_' . $view_mode, $settings);
 }

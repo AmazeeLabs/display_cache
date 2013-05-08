@@ -4,6 +4,3 @@ package = Performance
 core = "7.x"
 
 dependencies[] = entity
-
-files[] = views/plugins/DisplayCacheViewsPluginRowEntityView.inc
-files[] = views/handler/DisplayCacheViewsHandlerFieldEntity.inc

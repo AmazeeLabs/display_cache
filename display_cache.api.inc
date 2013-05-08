@@ -10,73 +10,14 @@
  */
 
 /**
- * Runs before an entity is rendered and cached.
- *
- * Usage example: Manipulate the renderable array.
- *
- * @param array $render_array
- *   The rendarable array of an entity.
- *
- * @param array $context
- *   Contains context variables:
- *   string ['entity_type']
- *     The entity type like 'node'.
- *   int ['entity_id']
- *     The entity id.
- *   string ['view_mode']
- *     View mode like 'full' or 'teaser'.
- *   array ['roles']
- *     Array of machine readable names of roles. NULL if role awareness is
- *     deactivated.
+ * Alters the keys array
+ * @param $keys
+ * @param $entity_type
+ * @param $entity_id
+ * @param $view_mode
+ * @param $settings
  */
-function hook_display_cache_pre_render_alter(&$render_array, $context) {
-
-}
-
-/**
- * Runs after a rendered entity was rendered.
- *
- * Usage example: Manipulate the rendered HTML or add JS with drupal_add_js.
- *
- * @param string $html
- *   HTML of the rendered entity.
- *
- * @param array $context
- *   Contains context variables:
- *   string ['entity_type']
- *     The entity type like 'node'.
- *   int ['entity_id']
- *     The entity id.
- *   string ['view_mode']
- *     View mode like 'full' or 'teaser'.
- *   array ['roles']
- *     Array of machine readable names of roles. NULL if role awareness is
- *     deactivated.
- */
-function hook_display_cache_post_render_alter(&$html, $context) {
-
-}
-
-
-/**
- * Alters the cache id for display cache entries.
- *
- * @param string $cid
- *   The actual cid.
- *
- * @param array $context
- *   Contains context variables:
- *   string ['entity_type']
- *     The entity type like 'node'.
- *   int ['entity_id']
- *     The entity id.
- *   string ['view_mode']
- *     View mode like 'full' or 'teaser'.
- *   array ['roles']
- *     Array of machine readable names of roles. NULL if role awareness is
- *     deactivated.
- */
-function hook_display_cache_get_cid_alter(&$cid, $context) {
+function hook_display_cache_cache_keys_alter(&$keys, $entity_type, $entity_id, $view_mode, $settings) {
 
 }
 
