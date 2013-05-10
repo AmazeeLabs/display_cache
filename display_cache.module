@@ -170,14 +170,23 @@ function _display_cache_flush_cache_callback() {
  * Implements hook_entity_view_alter().
  */
 function display_cache_entity_view_alter(&$build, $entity_type) {
-  $entity_id = entity_id($entity_type, $build['#' . $entity_type]);
+
   $view_mode = $build['#view_mode'];
 
   $settings = display_cache_get_settings($entity_type, $view_mode);
 
-  $keys = _display_cache_get_cache_keys($entity_type, $entity_id, $view_mode);
-
   if ($settings['use'] === DISPLAY_CACHE_ENABLED) {
+    if (!empty($build['#' . $entity_type])) {
+      $entity_id = entity_id($entity_type, $build['#' . $entity_type]);
+    }
+    else if (!empty($build['#entity'])) {
+      $entity_id = entity_id($entity_type, $build['#entity']);
+    }
+    else {
+      watchdog('display cache', 'The entity type <em>@entity_type</em> seems to be unsupported until now. Please report this to the issue cue of Display Cache so we can fix this.', array('@entity_type' => $entity_type), WATCHDOG_WARNING);
+      return;
+    }
+    $keys = _display_cache_get_cache_keys($entity_type, $entity_id, $view_mode);
     $build['#cache'] = array(
       'keys' => $keys,
       'bin' => 'cache_display_cache',
@@ -185,6 +194,7 @@ function display_cache_entity_view_alter(&$build, $entity_type) {
     );
   }
 }
+
 
 /**
  * Returns the display cache settings for given entity type and view mode.
