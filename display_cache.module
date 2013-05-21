@@ -133,7 +133,7 @@ function display_cache_entity_update($entity, $entity_type) {
 
 
 /**
- * Returns the display cache settings for given entity type and view mode.
+ * Returns display cache settings for given entity type, bundle and view mode.
  *
  * @param string $entity_type
  *   The entity type like 'node' or 'comment'.
@@ -144,7 +144,7 @@ function display_cache_entity_update($entity, $entity_type) {
  * @param string $view_mode
  *   View mode like 'full' or 'teaser'.
  *
- * @return
+ * @return array
  *   Array with settings.
  */
 function display_cache_get_settings($entity_type, $bundle, $view_mode) {

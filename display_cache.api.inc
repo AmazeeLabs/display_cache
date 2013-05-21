@@ -11,14 +11,14 @@
 
 /*
  * Alters the keys array
- * @param $keys
- * @param $entity_type
- * @param $entity_id
- * @param $view_mode
- * @param $settings
- * @todo: implementing drupal alter to call this hook.
+ *
+ * @param array $keys
+ *   Array of keys. Used to build the cache id.
+ *
+ * @see drupal_render_cid_create()
+ * @see drupal_render_cid_parts()
  */
-function hook_display_cache_cache_keys_alter(&$keys, $entity_type, $entity_id, $view_mode, $settings) {
+function hook_display_cache_cache_keys_alter(&$keys) {
 
 }
 
