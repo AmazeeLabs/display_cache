@@ -14,6 +14,9 @@ function display_cache_settings_forms() {
   return $forms;
 }
 
+/**
+ * Returns a 'Flush Caches'-button.
+ */
 function display_cache_flush_caches_form($form, $form_state) {
   $form['display_cache_flush_caches'] = array(
     '#type' => 'submit',
@@ -23,11 +26,16 @@ function display_cache_flush_caches_form($form, $form_state) {
   return $form;
 }
 
+/**
+ * Submit handler for display_cache_flush_caches_form().
+ */
 function display_cache_flush_caches_form_submit($form, $form_state) {
   cache_clear_all('*', 'cache_display_cache', TRUE);
 }
 
-
+/**
+ * Display cache settings form.
+ */
 function display_cache_field_ui_form(&$form, &$form_state) {
   $entity_type = $form['#entity_type'];
   $bundle = $form['#bundle'];
@@ -42,7 +50,6 @@ function display_cache_field_ui_form(&$form, &$form_state) {
     '#collapsed' => TRUE,
     '#access' => user_access('administer display cache'),
   );
-
 
   $display_cache_options = array(
     DISPLAY_CACHE_DISABLED => t('No caching'),
@@ -106,34 +113,34 @@ function display_cache_field_ui_form(&$form, &$form_state) {
     ),
   );
 
-
-    $field_instances = field_info_instances($entity_type, $bundle);
-    foreach ($field_instances as $field_name => $field_instance) {
-      if ($field_instance['display'][$view_mode]['type'] !== 'hidden') {
-        $fields[$field_instance['display'][$view_mode]['weight']] = $field_name;
-      }
+  $field_instances = field_info_instances($entity_type, $bundle);
+  foreach ($field_instances as $field_name => $field_instance) {
+    if ($field_instance['display'][$view_mode]['type'] !== 'hidden') {
+      $fields[$field_instance['display'][$view_mode]['weight']] = $field_name;
     }
+  }
 
-    ksort($fields);
-    $form['display_cache_fields'] = array(
-      '#title' => t('Display Cache Field Settings'),
-      '#type' => 'fieldset',
-      '#collapsible' => TRUE,
-      '#collapsed' => TRUE,
-      '#access' => user_access('administer display cache'),
-      '#description' => t('Use this options to cache fields with less granularity.'),
-    );
+  ksort($fields);
+  $form['display_cache_fields'] = array(
+    '#title' => t('Display Cache Field Settings'),
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#access' => user_access('administer display cache'),
+    '#description' => t('Use this options to cache fields with less granularity.'),
+  );
 
-    foreach ($fields as $field_name) {
-      $form_state['display_cache_field_settings'][] = $field_name;
-      _display_cache_field_settings_form($form, $form_states, $settings, $field_name);
-    }
-
+  foreach ($fields as $field_name) {
+    $form_state['display_cache_field_settings'][] = $field_name;
+    _display_cache_field_settings_form($form, $form_states, $settings, $field_name);
+  }
 
   $form['#submit'][] = 'display_cache_view_mode_settings_form_submit';
 }
 
-
+/**
+ * Display cache field settings form.
+ */
 function _display_cache_field_settings_form(&$form, &$form_states, $settings, $field_name) {
 
   $field_settings = array();
@@ -154,17 +161,17 @@ function _display_cache_field_settings_form(&$form, &$form_states, $settings, $f
   }
 
   if (isset($field_settings['override']) && ($field_settings['override'] == DISPLAY_CACHE_ENABLED
-    || $field_settings['override'] == DISPLAY_CACHE_DISABLED)) {
+      || $field_settings['override'] == DISPLAY_CACHE_DISABLED)
+  ) {
     $form['display_cache_fields'][$fieldset]['#collapsed'] = FALSE;
   }
-
 
   $display_cache_options = array(
     DISPLAY_CACHE_FIELDS => t('Use default'),
     DISPLAY_CACHE_ENABLED => t('Override display cache defaults'),
   );
 
- if (!empty($field_settings['override'])
+  if (!empty($field_settings['override'])
     && $field_settings['override'] != 0
   ) {
     $override_default_value = $field_settings['override'];
@@ -177,14 +184,12 @@ function _display_cache_field_settings_form(&$form, &$form_states, $settings, $f
     $display_cache_options[DISPLAY_CACHE_DISABLED] = t('Do not cache this field');
   }
 
-
   $form['display_cache_fields'][$fieldset][$fieldset . '_override'] = array(
     '#type' => 'radios',
     '#title' => t('Override display cache defaults'),
     '#default_value' => $override_default_value,
     '#options' => $display_cache_options,
   );
-
 
   $page_granularity_options = array(0 => t('No page granularity'));
   $page_default_value = 0;
@@ -198,7 +203,6 @@ function _display_cache_field_settings_form(&$form, &$form_states, $settings, $f
     }
   }
 
-
   $form['display_cache_fields'][$fieldset][$fieldset . '_page_granularity'] = array(
     '#type' => 'radios',
     '#title' => t('Cache per URL'),
@@ -210,7 +214,6 @@ function _display_cache_field_settings_form(&$form, &$form_states, $settings, $f
       ),
     ),
   );
-
 
   $user_default_value = 0;
   if (!empty($field_settings['user_granularity'])
@@ -224,7 +227,7 @@ function _display_cache_field_settings_form(&$form, &$form_states, $settings, $f
     if ($settings['default']['user_granularity'] == DRUPAL_CACHE_PER_ROLE) {
       $user_granularity_options[DRUPAL_CACHE_PER_ROLE] = t('Cache per role');
     }
-    else if ($settings['default']['user_granularity'] == DRUPAL_CACHE_PER_USER) {
+    elseif ($settings['default']['user_granularity'] == DRUPAL_CACHE_PER_USER) {
       $user_granularity_options[DRUPAL_CACHE_PER_ROLE] = t('Cache per role');
       $user_granularity_options[DRUPAL_CACHE_PER_USER] = t('Cache per user');
     }
@@ -257,8 +260,6 @@ function display_cache_view_mode_settings_form_submit($form, $form_state) {
   $values = $form_state['values'];
 
   $settings['default']['use'] = $values['display_cache_use'];
-
-
   $settings['default']['page_granularity'] = $values['display_cache_page_granularity'];
   $settings['default']['user_granularity'] = $values['display_cache_user_granularity'];
   $settings['default']['granularity'] = $values['display_cache_page_granularity'] | $values['display_cache_user_granularity'];
@@ -300,7 +301,6 @@ function display_cache_view_mode_settings_form_submit($form, $form_state) {
       $settings[$field_name]['granularity'] = $settings[$field_name]['page_granularity'] | $settings[$field_name]['user_granularity'];
     }
   }
-
 
   $bundle = $form['#bundle'];
   $entity_type = $form['#entity_type'];

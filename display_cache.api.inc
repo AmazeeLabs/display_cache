@@ -9,13 +9,14 @@
  * @{
  */
 
-/**
+/*
  * Alters the keys array
  * @param $keys
  * @param $entity_type
  * @param $entity_id
  * @param $view_mode
  * @param $settings
+ * @todo: implementing drupal alter to call this hook.
  */
 function hook_display_cache_cache_keys_alter(&$keys, $entity_type, $entity_id, $view_mode, $settings) {
 

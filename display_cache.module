@@ -173,7 +173,7 @@ function display_cache_entity_view_alter(&$build, $entity_type) {
     if (!empty($build['#' . $entity_type])) {
       $entity_id = entity_id($entity_type, $build['#' . $entity_type]);
     }
-    else if (!empty($build['#entity'])) {
+    elseif (!empty($build['#entity'])) {
       $entity_id = entity_id($entity_type, $build['#entity']);
     }
     else {
@@ -191,7 +191,9 @@ function display_cache_entity_view_alter(&$build, $entity_type) {
   }
 }
 
-
+/**
+ * Implements hook_field_attach_view_alter().
+ */
 function display_cache_field_attach_view_alter(&$output, $context) {
 
   $entity_type = $context['entity_type'];
@@ -211,13 +213,16 @@ function display_cache_field_attach_view_alter(&$output, $context) {
         $element['#cache'] = array(
           'keys' => $keys,
           'bin' => 'cache_display_cache',
-          'granularity' => $settings[$field_name]['granularity']
+          'granularity' => $settings[$field_name]['granularity'],
         );
       }
     }
   }
 }
 
+/**
+ * Implements hook_entity_info_alter().
+ */
 function display_cache_entity_info_alter(&$entity_info) {
   foreach ($entity_info as &$entity) {
     if (isset($entity['view callback'])) {
@@ -227,6 +232,11 @@ function display_cache_entity_info_alter(&$entity_info) {
   }
 }
 
+/**
+ * Alternative entity view callback.
+ *
+ * @see entity_view().
+ */
 function display_cache_view_entity($entities, $view_mode, $langcode, $entity_type) {
   $info = entity_get_info($entity_type);
   $return = array();
@@ -243,7 +253,7 @@ function display_cache_view_entity($entities, $view_mode, $langcode, $entity_typ
         '#cache' => array(
           'keys' => $keys,
           'granularity' => $settings['default']['granularity'],
-        )
+        ),
       );
 
       $cid = drupal_render_cid_create($cid_parts);
@@ -289,10 +299,26 @@ function display_cache_module_implements_alter(&$implementations, $hook) {
   }
 }
 
+/**
+ * Returns array of given keys for caching.
+ *
+ * @param string $entity_type
+ *   Entity type like 'node'.
+ *
+ * @param int $entity_id
+ *   Entity ID.
+ *
+ * @param string $view_mode
+ *   View mode like 'full' or 'teaser'.
+ *
+ * @param null $element
+ *   Element which is cached like 'entity', 'field' or 'render_array'.
+ *
+ * @return array
+ *   Array with keys to build th cache id.
+ */
 function display_cache_get_cache_keys($entity_type, $entity_id = NULL, $view_mode = NULL, $element = NULL) {
-  $keys = array(
-    'entity_type' => $entity_type
-  );
+  $keys = array('entity_type' => $entity_type);
   if (!empty($entity_id)) {
     $keys['entity_id'] = $entity_id;
     if (!empty($view_mode)) {
