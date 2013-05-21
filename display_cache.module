@@ -182,6 +182,7 @@ function display_cache_entity_view_alter(&$build, $entity_type) {
     }
 
     $keys = display_cache_get_cache_keys($entity_type, $entity_id, $view_mode, 'entity');
+
     $build['#cache'] = array(
       'keys' => $keys,
       'bin' => 'cache_display_cache',
@@ -228,7 +229,6 @@ function display_cache_entity_info_alter(&$entity_info) {
 
 function display_cache_view_entity($entities, $view_mode, $langcode, $entity_type) {
   $info = entity_get_info($entity_type);
-
   $return = array();
 
   foreach ($entities as $entity_id => $entity) {
@@ -282,12 +282,6 @@ function display_cache_view_entity($entities, $view_mode, $langcode, $entity_typ
  */
 function display_cache_module_implements_alter(&$implementations, $hook) {
   if ($hook == 'entity_info_alter') {
-    // Move our hook implementation to the bottom.
-    $group = $implementations['display_cache'];
-    unset($implementations['display_cache']);
-    $implementations['display_cache'] = $group;
-  }
-  if ($hook == 'module_implements_alter') {
     // Move our hook implementation to the bottom.
     $group = $implementations['display_cache'];
     unset($implementations['display_cache']);
