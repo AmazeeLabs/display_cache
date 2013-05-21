@@ -27,16 +27,6 @@ function display_cache_flush_caches() {
 }
 
 /**
- * Implements hook_admin_menu_cache_info().
- */
-function display_cache_admin_menu_cache_info() {
-  $links['display_cache'] = array(
-    'title' => 'Display Caches',
-  );
-  return $links;
-}
-
-/**
  * Implements hook_menu().
  */
 function display_cache_menu() {
@@ -64,6 +54,17 @@ function display_cache_menu() {
 }
 
 /**
+ * Implements hook_admin_menu_cache_info().
+ */
+function display_cache_admin_menu_cache_info() {
+  $links['display_cache'] = array(
+    'title' => 'Display Caches',
+  );
+
+  return $links;
+}
+
+/**
  * Menu callback to clear the cache table.
  */
 function _display_cache_flush_cache_callback() {
@@ -83,9 +84,10 @@ function display_cache_permission() {
 }
 
 /**
- * Flushes the display cache of a given entity.
+ * Flushes the display cache of a given element.
  *
- * If one argument is missing, all following arguments will be ignored.
+ * If one argument is missing, all following arguments will be replaced with a
+ * wildcard.
  *
  * @param string $entity_type
  *   Type like 'node' or 'comment'.
@@ -97,6 +99,9 @@ function display_cache_permission() {
  * @param string $view_mode
  *   (optional) View mode like 'full' or 'teaser'.
  *   Leave empty to flush all view modes of given entity.
+ *
+ * @param string $element
+ *   (optional) Element like 'entity', 'field' or 'render_array'.
  */
 function display_cache_flush_cache($entity_type, $entity = NULL, $view_mode = NULL, $element = NULL) {
 
@@ -133,13 +138,20 @@ function display_cache_entity_update($entity, $entity_type) {
  * @param string $entity_type
  *   The entity type like 'node' or 'comment'.
  *
+ * @param string $bundle
+ *   Bundle within the entity type like 'page' or 'article' for nodes.
+ *
  * @param string $view_mode
  *   View mode like 'full' or 'teaser'.
+ *
+ * @return
+ *   Array with settings.
  */
 function display_cache_get_settings($entity_type, $bundle, $view_mode) {
 
   $settings = variable_get('display_cache_' . $entity_type . '_' . $bundle . '_' . $view_mode, FALSE);
 
+  // Get default settings.
   if (!$settings && $view_mode !== 'default') {
     $settings = display_cache_get_settings($entity_type, $bundle, 'default');
     if (!$settings) {
@@ -169,6 +181,7 @@ function display_cache_entity_view_alter(&$build, $entity_type) {
 
   $display_settings = $settings['default'];
 
+  // Cache if enabled.
   if ($display_settings['use'] === DISPLAY_CACHE_ENABLED) {
     if (!empty($build['#' . $entity_type])) {
       $entity_id = entity_id($entity_type, $build['#' . $entity_type]);
@@ -177,7 +190,9 @@ function display_cache_entity_view_alter(&$build, $entity_type) {
       $entity_id = entity_id($entity_type, $build['#entity']);
     }
     else {
+      // Create watchdog entry for unsupported entities.
       watchdog('display cache', 'The entity type <em>@entity_type</em> seems to be unsupported until now. Please report this to the issue cue of Display Cache so we can fix this.', array('@entity_type' => $entity_type), WATCHDOG_WARNING);
+
       return;
     }
 
@@ -203,6 +218,7 @@ function display_cache_field_attach_view_alter(&$output, $context) {
 
   $settings = display_cache_get_settings($entity_type, $bundle, $view_mode);
 
+  // Cache if enabled.
   if (!empty($settings['default']['use'])) {
     foreach (element_children($output) as $field_name) {
 
@@ -225,6 +241,7 @@ function display_cache_field_attach_view_alter(&$output, $context) {
  */
 function display_cache_entity_info_alter(&$entity_info) {
   foreach ($entity_info as &$entity) {
+    // Replace view callback with own callback display_cache_view_entity().
     if (isset($entity['view callback'])) {
       $entity['entity view callback'] = $entity['view callback'];
       $entity['view callback'] = 'display_cache_view_entity';
@@ -235,7 +252,12 @@ function display_cache_entity_info_alter(&$entity_info) {
 /**
  * Alternative entity view callback.
  *
+ * This callback replacing all view callbacks provided by the Entity module. The
+ * original callback will be called within this callback. In this way it is
+ * possible to cache the renderable array as well.
+ *
  * @see entity_view()
+ * @see display_cache_entity_info_alter()
  */
 function display_cache_view_entity($entities, $view_mode, $langcode, $entity_type) {
   $info = entity_get_info($entity_type);
@@ -247,7 +269,7 @@ function display_cache_view_entity($entities, $view_mode, $langcode, $entity_typ
     $settings = display_cache_get_settings($entity_type, $bundle, $view_mode);
 
     if ($settings['default']['use'] == DISPLAY_CACHE_ENABLED) {
-
+      // Cache if enabled.
       $keys = display_cache_get_cache_keys($entity_type, $entity_id, $view_mode, 'render_array');
       $cid_parts = array(
         '#cache' => array(
@@ -270,6 +292,7 @@ function display_cache_view_entity($entities, $view_mode, $langcode, $entity_typ
       }
     }
     else {
+      // Render without caching.
       $entity = entity_key_array_by_property(array($entity), $info['entity keys']['id']);
       $render_array = $info['entity view callback']($entity, $view_mode, $langcode, $entity_type);
       $render_array = $render_array[$entity_type][$entity_id];
@@ -283,12 +306,11 @@ function display_cache_view_entity($entities, $view_mode, $langcode, $entity_typ
 /**
  * Implements hook_module_implements_alter().
  *
- * Moves the hook_entity_info_alter() implementation to the bottom so it is
- * invoked after all modules relying on the entity API.
- * That way we ensure to run last and clear the field-info cache after the
- * others added in their bundle information.
+ * Move the hook implementation of hook_entity_info_alter() to the bottom to be
+ * able to alter the view callback added by Entity API during this hook.
  *
  * @see entity_entity_info_alter()
+ * @see display_cache_install()
  */
 function display_cache_module_implements_alter(&$implementations, $hook) {
   if ($hook == 'entity_info_alter') {
@@ -315,7 +337,7 @@ function display_cache_module_implements_alter(&$implementations, $hook) {
  *   Element which is cached like 'entity', 'field' or 'render_array'.
  *
  * @return array
- *   Array with keys to build th cache id.
+ *   Array with keys to build the cache id.
  */
 function display_cache_get_cache_keys($entity_type, $entity_id = NULL, $view_mode = NULL, $element = NULL) {
   $keys = array('entity_type' => $entity_type);
@@ -328,6 +350,8 @@ function display_cache_get_cache_keys($entity_type, $entity_id = NULL, $view_mod
       }
     }
   }
+
+  drupal_alter('display_cache_get_cache_keys', $keys);
 
   return $keys;
 }
