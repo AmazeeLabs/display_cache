@@ -235,7 +235,7 @@ function display_cache_entity_info_alter(&$entity_info) {
 /**
  * Alternative entity view callback.
  *
- * @see entity_view().
+ * @see entity_view()
  */
 function display_cache_view_entity($entities, $view_mode, $langcode, $entity_type) {
   $info = entity_get_info($entity_type);

@@ -17,8 +17,8 @@ function display_cache_schema() {
  * Implements hook_install().
  */
 function display_cache_install() {
-  // Increase the module weight, so display_cache catches any alterations made by
-  // other modules in hook_module_implements_alter().
+  // Increase the module weight, so display_cache catches any alterations made
+  // by other modules in hook_module_implements_alter().
   db_update('system')
     ->fields(array('weight' => 100))
     ->condition('type', 'module')
