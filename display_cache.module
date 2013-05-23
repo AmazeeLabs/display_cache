@@ -14,8 +14,10 @@ define('DISPLAY_CACHE_FIELDS', '2');
  * Implements hook_form_FORM_ID_alter().
  */
 function display_cache_form_field_ui_display_overview_form_alter(&$form, &$form_state) {
-  form_load_include($form_state, 'inc', 'display_cache', 'display_cache.admin');
-  display_cache_field_ui_form($form, $form_state);
+  if (user_access('administer display cache')) {
+    form_load_include($form_state, 'inc', 'display_cache', 'display_cache.admin');
+    display_cache_field_ui_form($form, $form_state);
+  }
 }
 
 
