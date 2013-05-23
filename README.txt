@@ -52,4 +52,5 @@ Entity API
 
 * Flush Display Cache
 
-  - Call admin/config/development/performance/display-cache and submit the form.
+  - Call Home » Administration » Configuration » Development » Display Cache
+    and submit the form.
