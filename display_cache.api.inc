@@ -9,7 +9,7 @@
  * @{
  */
 
-/*
+/**
  * Alters the keys array
  *
  * @param array $keys

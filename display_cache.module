@@ -213,8 +213,16 @@ function display_cache_field_attach_view_alter(&$output, $context) {
 
   $entity_type = $context['entity_type'];
   $entity_id = entity_id($entity_type, $context['entity']);
-  $bundle = $output['#bundle'];
   $view_mode = $context['view_mode'];
+
+  // Get bundle.
+  if (isset($output['#bundle'])) {
+    $bundle = $output['#bundle'];
+  }
+  else {
+    $first_field = reset($output);
+    $bundle = $first_field['#bundle'];
+  }
 
   $settings = display_cache_get_settings($entity_type, $bundle, $view_mode);
 
