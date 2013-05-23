@@ -335,5 +335,14 @@ function display_cache_view_mode_settings_form_submit($form, $form_state) {
   $entity_type = $form['#entity_type'];
   $view_mode = $form['#view_mode'];
 
-  variable_set('display_cache_' . $entity_type . '_' . $bundle . '_' . $view_mode, $settings);
+  $variable_name = 'display_cache_' . $entity_type . '_' . $bundle . '_' . $view_mode;
+
+  variable_set($variable_name, $settings);
+
+  $display_cache_variables = variable_get('display_cache_variables', array());
+
+  if (!in_array($variable_name, $display_cache_variables)) {
+    $display_cache_variables[] = $variable_name;
+    variable_set('display_cache_variables', $display_cache_variables);
+  }
 }

@@ -25,3 +25,16 @@ function display_cache_install() {
     ->condition('name', 'display_cache')
     ->execute();
 }
+
+/**
+ * Implements hook_uninstall().
+ */
+function display_cache_uninstall() {
+  $display_cache_variables = variable_get('display_cache_variables', array());
+
+  foreach ($display_cache_variables as $variable_name) {
+    variable_del($variable_name);
+  }
+
+  variable_del('display_cache_variables');
+}
