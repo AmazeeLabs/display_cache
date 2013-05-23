@@ -46,7 +46,7 @@ function display_cache_menu() {
   // Menu item for configurations.
   $menu_items['admin/config/development/display-cache'] = array(
     'title' => 'Display Cache',
-    'description' => t('Form to submit cache flush for display cache.'),
+    'description' => 'Form to submit cache flush for display cache.',
     'page callback' => 'display_cache_settings_forms',
     'access arguments' => array('administer display cache'),
     'file' => 'display_cache.admin.inc',
