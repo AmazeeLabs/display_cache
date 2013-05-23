@@ -72,6 +72,7 @@ function display_cache_admin_menu_cache_info() {
  */
 function _display_cache_flush_cache_callback() {
   cache_clear_all('*', 'cache_display_cache', TRUE);
+  drupal_set_message('Display cache cleared.');
   drupal_goto($_GET['destination']);
 }
 

@@ -31,6 +31,7 @@ function display_cache_flush_caches_form($form, $form_state) {
  */
 function display_cache_flush_caches_form_submit($form, $form_state) {
   cache_clear_all('*', 'cache_display_cache', TRUE);
+  drupal_set_message('Display cache cleared.');
 }
 
 /**
