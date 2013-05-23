@@ -10,7 +10,7 @@
  */
 
 /**
- * Alters the keys array
+ * Alters the keys to build a cid.
  *
  * @param array $keys
  *   Array of keys. Used to build the cache id.
