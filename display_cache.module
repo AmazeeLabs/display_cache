@@ -281,8 +281,8 @@ function display_cache_view_entity($entities, $view_mode, $langcode, $entity_typ
     $settings = display_cache_get_settings($entity_type, $bundle, $view_mode);
 
     if ($settings['default']['use'] == DISPLAY_CACHE_ENABLED) {
-      // Cache if enabled.
-      $keys = display_cache_get_cache_keys($entity_type, $entity_id, $view_mode, 'render_array');
+      // Get rendered HTML from cache.
+      $keys = display_cache_get_cache_keys($entity_type, $entity_id, $view_mode, 'entity');
       $cid_parts = array(
         '#cache' => array(
           'keys' => $keys,
@@ -300,7 +300,6 @@ function display_cache_view_entity($entities, $view_mode, $langcode, $entity_typ
         $entity = entity_key_array_by_property(array($entity), $info['entity keys']['id']);
         $render_array = $info['entity view callback']($entity, $view_mode, $langcode, $entity_type);
         $render_array = $render_array[$entity_type][$entity_id];
-        cache_set($cid, $render_array, 'cache_display_cache');
       }
     }
     else {
