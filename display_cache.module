@@ -256,8 +256,8 @@ function display_cache_entity_info_alter(&$entity_info) {
     // Replace view callback with own callback display_cache_view_entity().
     if (isset($entity['view callback'])) {
       $entity['entity view callback'] = $entity['view callback'];
-      $entity['view callback'] = 'display_cache_view_entity';
     }
+    $entity['view callback'] = 'display_cache_view_entity';
   }
 }
 
@@ -277,7 +277,13 @@ function display_cache_view_entity($entities, $view_mode, $langcode, $entity_typ
 
   foreach ($entities as $entity_id => $entity) {
     $entity_info = entity_get_info($entity_type);
-    $bundle = $entity->{$entity_info['bundle keys']['bundle']};
+    if (!empty($entity_info['bundle keys']['bundle'])) {
+      $bundle_key = $entity_info['bundle keys']['bundle'];
+    }
+    else {
+      $bundle_key = $entity_info['entity keys']['bundle'];
+    }
+    $bundle = $entity->{$bundle_key};
     $settings = display_cache_get_settings($entity_type, $bundle, $view_mode);
     $render_array = array();
 
@@ -300,9 +306,15 @@ function display_cache_view_entity($entities, $view_mode, $langcode, $entity_typ
     }
     if (empty($render_array)) {
       // Get renderable array.
-      $entity = entity_key_array_by_property(array($entity), $info['entity keys']['id']);
-      $render_array = $info['entity view callback']($entity, $view_mode, $langcode, $entity_type);
-      $render_array = $render_array[$entity_type][$entity_id];
+      if (isset($info['entity view callback'])) {
+        $entity = entity_key_array_by_property(array($entity), $info['entity keys']['id']);
+        $render_array = $info['entity view callback']($entity, $view_mode, $langcode, $entity_type);
+        $render_array = $render_array[$entity_type][$entity_id];
+      }
+      elseif (in_array('EntityAPIControllerInterface', class_implements($info['controller class']))) {
+        $render_array = entity_get_controller($entity_type)->view(array($entity), $view_mode, $langcode);
+        $render_array = $render_array[$entity_type][$entity_id];
+      }
     }
     $return[$entity_type][$entity_id] = $render_array;
   }
@@ -361,4 +373,9 @@ function display_cache_get_cache_keys($entity_type, $entity_id = NULL, $view_mod
   drupal_alter('display_cache_get_cache_keys', $keys);
 
   return $keys;
+}
+
+
+function display_cache_entity_property_info_alter(&$info) {
+  dpm($info);
 }
