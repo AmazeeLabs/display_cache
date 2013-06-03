@@ -266,7 +266,7 @@ function display_cache_entity_info_alter(&$entity_info) {
  *
  * This callback replacing all view callbacks provided by the Entity module. The
  * original callback will be called within this callback. In this way it is
- * possible to cache the renderable array as well.
+ * possible to return the cached html before a renderable array is build.
  *
  * @see entity_view()
  * @see display_cache_entity_info_alter()
