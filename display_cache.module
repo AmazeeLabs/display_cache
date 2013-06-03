@@ -279,6 +279,7 @@ function display_cache_view_entity($entities, $view_mode, $langcode, $entity_typ
     $entity_info = entity_get_info($entity_type);
     $bundle = $entity->{$entity_info['bundle keys']['bundle']};
     $settings = display_cache_get_settings($entity_type, $bundle, $view_mode);
+    $render_array = array();
 
     if ($settings['default']['use'] == DISPLAY_CACHE_ENABLED) {
       // Get rendered HTML from cache.
@@ -296,14 +297,9 @@ function display_cache_view_entity($entities, $view_mode, $langcode, $entity_typ
       if (!empty($data->data)) {
         $render_array = $data->data;
       }
-      else {
-        $entity = entity_key_array_by_property(array($entity), $info['entity keys']['id']);
-        $render_array = $info['entity view callback']($entity, $view_mode, $langcode, $entity_type);
-        $render_array = $render_array[$entity_type][$entity_id];
-      }
     }
-    else {
-      // Render without caching.
+    if (empty($render_array)) {
+      // Get renderable array.
       $entity = entity_key_array_by_property(array($entity), $info['entity keys']['id']);
       $render_array = $info['entity view callback']($entity, $view_mode, $langcode, $entity_type);
       $render_array = $render_array[$entity_type][$entity_id];
