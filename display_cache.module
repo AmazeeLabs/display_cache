@@ -374,8 +374,3 @@ function display_cache_get_cache_keys($entity_type, $entity_id = NULL, $view_mod
 
   return $keys;
 }
-
-
-function display_cache_entity_property_info_alter(&$info) {
-  dpm($info);
-}
