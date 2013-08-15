@@ -124,6 +124,7 @@ function display_cache_field_ui_form(&$form, &$form_state) {
   );
 
   // Add forms for field settings.
+  $fields = array();
   $field_instances = field_info_instances($entity_type, $bundle);
   foreach ($field_instances as $field_name => $field_instance) {
     if ($field_instance['display'][$view_mode]['type'] !== 'hidden') {
@@ -132,7 +133,9 @@ function display_cache_field_ui_form(&$form, &$form_state) {
   }
 
   // Add fieldset for field settings.
-  ksort($fields);
+  if (!empty($fields)) {
+    ksort($fields);
+  }
   $form['display_cache_fields'] = array(
     '#title' => t('Display Cache Field Settings'),
     '#type' => 'fieldset',

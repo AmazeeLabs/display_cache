@@ -193,6 +193,9 @@ function display_cache_entity_view_alter(&$build, $entity_type) {
     elseif (!empty($build['#entity'])) {
       $entity_id = entity_id($entity_type, $build['#entity']);
     }
+    elseif ($entity_type === 'taxonomy_term') {
+      $entity_id = entity_id($entity_type, $build['#term']);
+    }
     else {
       // Create watchdog entry for unsupported entities.
       watchdog('display cache', 'The entity type <em>@entity_type</em> seems to be unsupported until now. Please report this to the issue cue of Display Cache so we can fix this.', array('@entity_type' => $entity_type), WATCHDOG_WARNING);
@@ -230,22 +233,22 @@ function display_cache_field_attach_view_alter(&$output, $context) {
 
   $settings = display_cache_get_settings($entity_type, $bundle, $view_mode);
 
-  // Cache if enabled.
-  if (!empty($settings['default']['use'])) {
-    foreach (element_children($output) as $field_name) {
+    // Cache if enabled.
+    if (!empty($settings['default']['use'])) {
+      foreach (element_children($output) as $field_name) {
+        if (array_key_exists($field_name, $settings) && $settings[$field_name]['override'] != DISPLAY_CACHE_DISABLED) {
+          $element = & $output[$field_name];
 
-      if ($settings[$field_name]['override'] != DISPLAY_CACHE_DISABLED) {
-        $element = & $output[$field_name];
+          $keys = display_cache_get_cache_keys($entity_type, $entity_id, $view_mode, $field_name);
 
-        $keys = display_cache_get_cache_keys($entity_type, $entity_id, $view_mode, $field_name);
-        $element['#cache'] = array(
-          'keys' => $keys,
-          'bin' => 'cache_display_cache',
-          'granularity' => $settings[$field_name]['granularity'],
-        );
+          $element['#cache'] = array(
+            'keys' => $keys,
+            'bin' => 'cache_display_cache',
+            'granularity' => $settings[$field_name]['granularity'],
+          );
+        }
       }
     }
-  }
 }
 
 /**
