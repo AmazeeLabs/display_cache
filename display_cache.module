@@ -34,15 +34,6 @@ function display_cache_flush_caches() {
 function display_cache_menu() {
   $menu_items = array();
 
-  // Menu item to provide flush cache via admin_menu.
-  if (module_exists('admin_menu')) {
-    $menu_items['admin_menu/flush-cache/display_cache'] = array(
-      'page callback' => '_display_cache_flush_cache_callback',
-      'access arguments' => array('flush caches'),
-      'type' => MENU_CALLBACK,
-    );
-  }
-
   // Menu item for configurations.
   $menu_items['admin/config/development/display-cache'] = array(
     'title' => 'Display Cache',
@@ -62,6 +53,7 @@ function display_cache_menu() {
 function display_cache_admin_menu_cache_info() {
   $links['display_cache'] = array(
     'title' => 'Display Caches',
+    'callback' => '_display_cache_flush_cache_callback',
   );
 
   return $links;
@@ -72,8 +64,6 @@ function display_cache_admin_menu_cache_info() {
  */
 function _display_cache_flush_cache_callback() {
   cache_clear_all('*', 'cache_display_cache', TRUE);
-  drupal_set_message('Display cache cleared.');
-  drupal_goto($_GET['destination']);
 }
 
 /**
@@ -373,7 +363,7 @@ function display_cache_get_cache_keys($entity_type, $entity_id = NULL, $view_mod
     }
   }
 
-  drupal_alter('display_cache_get_cache_keys', $keys);
+  drupal_alter('display_cache_cache_keys', $keys);
 
   return $keys;
 }
