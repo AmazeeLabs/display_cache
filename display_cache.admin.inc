@@ -140,7 +140,7 @@ function display_cache_field_ui_form(&$form, &$form_state) {
   // Add settings form for each field.
   foreach ($fields as $field_name) {
     $form_state['display_cache_field_settings'][] = $field_name;
-    _display_cache_field_settings_form($form, $form_states, $settings, $field_name);
+    _display_cache_field_settings_form($form, $form_state, $settings, $field_name);
   }
 
   // Add custom submit handler.
@@ -153,7 +153,7 @@ function display_cache_field_ui_form(&$form, &$form_state) {
  * @see display_cache_form_field_ui_display_overview_form_alter()
  * @see display_cache_field_ui_form()
  */
-function _display_cache_field_settings_form(&$form, &$form_states, $settings, $field_name) {
+function _display_cache_field_settings_form(&$form, &$form_state, $settings, $field_name) {
 
   $field_settings = array();
   if (!empty($settings[$field_name])) {
