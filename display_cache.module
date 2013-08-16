@@ -38,7 +38,8 @@ function display_cache_menu() {
   $menu_items['admin/config/development/display-cache'] = array(
     'title' => 'Display Cache',
     'description' => 'Form to submit cache flush for display cache.',
-    'page callback' => 'display_cache_settings_forms',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('display_cache_flush_caches_form'),
     'access arguments' => array('administer display cache'),
     'file' => 'display_cache.admin.inc',
     'type' => MENU_NORMAL_ITEM,
@@ -188,7 +189,7 @@ function display_cache_entity_view_alter(&$build, $entity_type) {
     }
     else {
       // Create watchdog entry for unsupported entities.
-      watchdog('display cache', 'The entity type <em>@entity_type</em> seems to be unsupported until now. Please report this to the issue cue of Display Cache so we can fix this.', array('@entity_type' => $entity_type), WATCHDOG_WARNING);
+      watchdog('display cache', 'The entity type %entity_type seems to be unsupported until now. Please report this to the issue cue of Display Cache so we can fix this.', array('@entity_type' => $entity_type), WATCHDOG_WARNING);
 
       return;
     }
