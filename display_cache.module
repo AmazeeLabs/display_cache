@@ -20,7 +20,6 @@ function display_cache_form_field_ui_display_overview_form_alter(&$form, &$form_
   }
 }
 
-
 /**
  * Implements hook_flush_caches().
  */
@@ -73,7 +72,8 @@ function _display_cache_flush_cache_callback() {
 function display_cache_permission() {
   return array(
     'administer display cache' => array(
-      'title' => 'Administer Display Cache',
+      'title' => t('Administer Display Cache'),
+      'description' => t('Permission to administer display cache settings and clear display cache caches from the ui.'),
     ),
   );
 }
@@ -189,7 +189,7 @@ function display_cache_entity_view_alter(&$build, $entity_type) {
     }
     else {
       // Create watchdog entry for unsupported entities.
-      watchdog('display cache', 'The entity type %entity_type seems to be unsupported until now. Please report this to the issue cue of Display Cache so we can fix this.', array('@entity_type' => $entity_type), WATCHDOG_WARNING);
+      watchdog('display cache', 'The entity type %entity_type seems to be unsupported until now. Please report this to the issue cue of Display Cache so we can fix this.', array('%entity_type' => $entity_type), WATCHDOG_WARNING);
 
       return;
     }
