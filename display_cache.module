@@ -271,11 +271,11 @@ function display_cache_view_entity($entities, $view_mode, $langcode, $entity_typ
 
   foreach ($entities as $entity_id => $entity) {
     $entity_info = entity_get_info($entity_type);
-    if (!empty($entity_info['bundle keys']['bundle'])) {
-      $bundle_key = $entity_info['bundle keys']['bundle'];
+    if (!empty($entity_info['entity keys']['bundle'])) {
+      $bundle_key = $entity_info['entity keys']['bundle'];
     }
     else {
-      $bundle_key = $entity_info['entity keys']['bundle'];
+      $bundle_key = $entity_info['bundle keys']['bundle'];
     }
     $bundle = $entity->{$bundle_key};
     $settings = display_cache_get_settings($entity_type, $bundle, $view_mode);
