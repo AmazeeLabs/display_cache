@@ -191,6 +191,9 @@ function display_cache_entity_view_alter(&$build, $entity_type) {
     elseif ($entity_type === 'taxonomy_term') {
       $entity_id = entity_id($entity_type, $build['#term']);
     }
+    elseif ($entity_type === 'user') {
+      $entity_id = entity_id($entity_type, $build['#account']);
+    }
     else {
       // Create watchdog entry for unsupported entities.
       watchdog('display cache', 'The entity type %entity_type seems to be unsupported until now. Please report this to the issue cue of Display Cache so we can fix this.', array('%entity_type' => $entity_type), WATCHDOG_WARNING);
@@ -282,15 +285,13 @@ function display_cache_view_entity($entities, $view_mode, $langcode, $entity_typ
 
     // Disable display_cache by global setting.
     if (variable_get('display_cache_disable', FALSE) === FALSE) {
-      $entity_info = entity_get_info($entity_type);
-      if (!empty($entity_info['entity keys']['bundle'])) {
-        $bundle_key = $entity_info['entity keys']['bundle'];
+      list(,,$bundle) = entity_extract_ids($entity_type, $entity);
+      // Make sure we have a bundle, so if the entity type does not have one we
+      // default to the entity type itself. This is the case for example for
+      // user entities.
+      if (empty($bundle)) {
+        $bundle = $entity_type;
       }
-      else {
-        $bundle_key = $entity_info['bundle keys']['bundle'];
-      }
-
-      $bundle = $entity->{$bundle_key};
       $settings = display_cache_get_settings($entity_type, $bundle, $view_mode);
 
       if ($settings['default']['use'] == DISPLAY_CACHE_ENABLED) {
