@@ -73,15 +73,53 @@ function display_cache_panels_get_id($conf, $display, $args, $contexts, $pane) {
   // We have enabled this only for entities at the moment.
   $element = 'entity';
   $keys = display_cache_get_cache_keys($entity_type, $entity_id, $view_mode, $element);
-
-  // @todo: Implement support for granularity.
+  $granularity = $conf['page_granularity'] | $conf['user_granularity'];
   $cid_parts = array(
     '#cache' => array(
       'keys' => $keys,
+      'granularity' => $granularity,
     ),
   );
 
   return drupal_render_cid_create($cid_parts);
 }
 
+/**
+ * Configuration form for the pane.
+ */
+function display_cache_panels_settings_form($conf, $display, $pid) {
+  // Add radios with granularity options for cache-per-page.
+  $page_granularity_options = array(
+    0 => t('No page granularity'),
+    DRUPAL_CACHE_PER_PAGE => t('Cache per URL'),
+  );
 
+  $form['page_granularity'] = array(
+    '#type' => 'radios',
+    '#title' => t('Cache per URL'),
+    '#default_value' => !empty($conf['page_granularity']) ? $conf['page_granularity'] : 0,
+    '#options' => $page_granularity_options,
+  );
+
+  // Add radios with granularity options for users.
+  $user_granularity_options = array(
+    0 => t('No user granularity'),
+    DRUPAL_CACHE_PER_ROLE => t('Cache per role'),
+    DRUPAL_CACHE_PER_USER => t('Cache per user'),
+  );
+
+  $form['user_granularity'] = array(
+    '#type' => 'radios',
+    '#title' => t('User granularity'),
+    '#default_value' => !empty($conf['user_granularity']) ? $conf['user_granularity'] : 0,
+    '#options' => $user_granularity_options,
+  );
+  return $form;
+}
+
+/**
+ * Pane configuration form submit handler.
+ */
+function display_cache_panels_settings_form_submit($form, &$form_state) {
+
+}
