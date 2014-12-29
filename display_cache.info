@@ -4,3 +4,5 @@ package = Performance
 core = "7.x"
 
 dependencies[] = entity
+
+files[] = tests/display_cache.test

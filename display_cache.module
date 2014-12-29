@@ -42,13 +42,13 @@ function display_cache_menu() {
 
   // Menu item for configurations.
   $menu_items['admin/config/development/display-cache'] = array(
-    'title' => 'Display Cache',
-    'description' => 'Form to submit cache flush for display cache.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('display_cache_flush_caches_form'),
+    'title'            => 'Display Cache',
+    'description'      => 'Form to submit cache flush for display cache.',
+    'page callback'    => 'drupal_get_form',
+    'page arguments'   => array('display_cache_flush_caches_form'),
     'access arguments' => array('administer display cache'),
-    'file' => 'display_cache.admin.inc',
-    'type' => MENU_NORMAL_ITEM,
+    'file'             => 'display_cache.admin.inc',
+    'type'             => MENU_NORMAL_ITEM,
   );
 
   return $menu_items;
@@ -59,7 +59,7 @@ function display_cache_menu() {
  */
 function display_cache_admin_menu_cache_info() {
   $links['display_cache'] = array(
-    'title' => 'Display Caches',
+    'title'    => 'Display Caches',
     'callback' => '_display_cache_clear_cache',
   );
 
@@ -72,7 +72,7 @@ function display_cache_admin_menu_cache_info() {
 function display_cache_permission() {
   return array(
     'administer display cache' => array(
-      'title' => t('Administer Display Cache'),
+      'title'       => t('Administer Display Cache'),
       'description' => t('Permission to administer display cache settings and clear display cache caches from the ui.'),
     ),
   );
@@ -152,10 +152,10 @@ function display_cache_get_settings($entity_type, $bundle, $view_mode) {
     if (!$settings) {
       return array(
         'default' => array(
-          'use' => DISPLAY_CACHE_DISABLED,
+          'use'              => DISPLAY_CACHE_DISABLED,
           'page_granularity' => DISPLAY_CACHE_DISABLED,
           'user_granularity' => DISPLAY_CACHE_DISABLED,
-          'granularity' => DISPLAY_CACHE_DISABLED,
+          'granularity'      => DISPLAY_CACHE_DISABLED,
         ),
       );
     }
@@ -174,7 +174,7 @@ function display_cache_entity_view_alter(&$build, $entity_type) {
   }
 
   $view_mode = $build['#view_mode'];
-  $bundle = $build['#bundle'];
+  $bundle = isset($build['#bundle']) ? $build['#bundle'] : NULL;
 
   $settings = display_cache_get_settings($entity_type, $bundle, $view_mode);
 
@@ -191,6 +191,9 @@ function display_cache_entity_view_alter(&$build, $entity_type) {
     elseif ($entity_type === 'taxonomy_term') {
       $entity_id = entity_id($entity_type, $build['#term']);
     }
+    elseif ($entity_type === 'user') {
+      $entity_id = entity_id($entity_type, $build['#account']);
+    }
     else {
       // Create watchdog entry for unsupported entities.
       watchdog('display cache', 'The entity type %entity_type seems to be unsupported until now. Please report this to the issue cue of Display Cache so we can fix this.', array('%entity_type' => $entity_type), WATCHDOG_WARNING);
@@ -201,8 +204,8 @@ function display_cache_entity_view_alter(&$build, $entity_type) {
     $keys = display_cache_get_cache_keys($entity_type, $entity_id, $view_mode, 'entity');
 
     $build['#cache'] = array(
-      'keys' => $keys,
-      'bin' => DISPLAY_CACHE_CACHE_BIN,
+      'keys'        => $keys,
+      'bin'         => DISPLAY_CACHE_CACHE_BIN,
       'granularity' => $display_settings['granularity'],
     );
   }
@@ -236,13 +239,13 @@ function display_cache_field_attach_view_alter(&$output, $context) {
   if (!empty($settings['default']['use'])) {
     foreach (element_children($output) as $field_name) {
       if (array_key_exists($field_name, $settings) && $settings[$field_name]['override'] != DISPLAY_CACHE_DISABLED) {
-        $element = & $output[$field_name];
+        $element = &$output[$field_name];
 
         $keys = display_cache_get_cache_keys($entity_type, $entity_id, $view_mode, $field_name);
 
         $element['#cache'] = array(
-          'keys' => $keys,
-          'bin' => 'cache_display_cache',
+          'keys'        => $keys,
+          'bin'         => 'cache_display_cache',
           'granularity' => $settings[$field_name]['granularity'],
         );
       }
@@ -283,14 +286,22 @@ function display_cache_view_entity($entities, $view_mode, $langcode, $entity_typ
     // Disable display_cache by global setting.
     if (variable_get('display_cache_disable', FALSE) === FALSE) {
       $entity_info = entity_get_info($entity_type);
+      // Try to find a bundle key from the entity info.
       if (!empty($entity_info['entity keys']['bundle'])) {
         $bundle_key = $entity_info['entity keys']['bundle'];
       }
-      else {
+      elseif (!empty($entity_info['bundle keys']['bundle'])) {
         $bundle_key = $entity_info['bundle keys']['bundle'];
       }
 
-      $bundle = $entity->{$bundle_key};
+      // This entity may not have a bundle key, fallback to the entity type.
+      if (isset($bundle_key) && !empty($entity->{$bundle_key})) {
+        $bundle = $entity->{$bundle_key};
+      }
+      else {
+        $bundle = $entity_type;
+      }
+
       $settings = display_cache_get_settings($entity_type, $bundle, $view_mode);
 
       if ($settings['default']['use'] == DISPLAY_CACHE_ENABLED) {
@@ -298,7 +309,7 @@ function display_cache_view_entity($entities, $view_mode, $langcode, $entity_typ
         $keys = display_cache_get_cache_keys($entity_type, $entity_id, $view_mode, 'entity');
         $cid_parts = array(
           '#cache' => array(
-            'keys' => $keys,
+            'keys'        => $keys,
             'granularity' => $settings['default']['granularity'],
           ),
         );
