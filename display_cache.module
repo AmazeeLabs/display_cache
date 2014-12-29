@@ -106,7 +106,7 @@ function display_cache_flush_cache($entity_type, $entity = NULL, $view_mode = NU
 
   $keys = display_cache_get_cache_keys($entity_type, $entity, $view_mode, $element);
 
-  $cache_id = implode(':', $keys);
+  $cache_id = implode(':', $keys) . ':';
   cache_clear_all($cache_id, DISPLAY_CACHE_CACHE_BIN, TRUE);
 }
 
