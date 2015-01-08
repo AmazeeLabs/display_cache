@@ -28,6 +28,15 @@ function display_cache_form_field_ui_display_overview_form_alter(&$form, &$form_
 }
 
 /**
+ * Implements hook_ctools_plugin_directory().
+ */
+function display_cache_ctools_plugin_directory($module, $plugin) {
+  if ($module == 'page_manager' || $module == 'panels' || $module == 'ctools') {
+    return 'plugins/' . $plugin;
+  }
+}
+
+/**
  * Implements hook_flush_caches().
  */
 function display_cache_flush_caches() {
