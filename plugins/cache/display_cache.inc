@@ -39,9 +39,9 @@ function display_cache_panels_get_cache($conf, $display, $args, $contexts, $pane
 /**
  * Set cached content.
  */
-function display_cache_panels_set_cache($conf, $cache_object, $display, $args, $contexts, $pane = NULL) {
+function display_cache_panels_set_cache($conf, $content, $display, $args, $contexts, $pane = NULL) {
   $cid = display_cache_panels_get_id($conf, $display, $args, $contexts, $pane);
-  cache_set($cid, $cache_object, DISPLAY_CACHE_CACHE_BIN);
+  cache_set($cid, $content, DISPLAY_CACHE_CACHE_BIN);
 }
 
 /**
@@ -72,12 +72,7 @@ function display_cache_panels_get_id($conf, $display, $args, $contexts, $pane) {
   $view_mode = $words[3];
   // We have enabled this only for entities at the moment.
   $element = 'entity';
-
-  // We should not mix render cache with display cache, because the display
-  // cache caches the panels_cache_object object.
-  $keys =  array('cache_type' => 'display_cache_panels');
-
-  $keys += display_cache_get_cache_keys($entity_type, $entity_id, $view_mode, $element);
+  $keys = display_cache_get_cache_keys($entity_type, $entity_id, $view_mode, $element);
   $granularity = $conf['page_granularity'] | $conf['user_granularity'];
   $cid_parts = array(
     '#cache' => array(
