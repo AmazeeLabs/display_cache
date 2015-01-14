@@ -3,6 +3,9 @@
 /**
  * @file
  * Provides a Display Cache plugin for panelizers.
+ *
+ * WARNING: this plugin should be used only on the "Full page override"
+ * panelizer displays!
  */
 
 // Plugin definition
