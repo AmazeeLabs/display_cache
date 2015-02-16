@@ -178,7 +178,7 @@ function display_cache_get_settings($entity_type, $bundle, $view_mode) {
  */
 function display_cache_entity_view_alter(&$build, $entity_type) {
   // Disable display_cache by global setting.
-  if (variable_get('display_cache_disable', FALSE) === TRUE || variable_get('display_cache_disable_fields_cache', FALSE) === TRUE) {
+  if (variable_get('display_cache_disable', FALSE) === TRUE) {
     return;
   }
 
