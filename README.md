@@ -39,3 +39,33 @@ to flush the display cache caches.
 
   * Call Home » Administration » Configuration » Development » Display Cache
     and submit the form.
+
+## Circumvent the display cache (Programmatically)
+
+There might be some cases where you do not want the cached entity in your module
+or theme or wherever.
+
+There is a programmatically way to prevent display cache from fetching the
+cached version of an entity view.
+
+Simply attach the constant `DISPLAY_CACHE_VIEW_MODE_CACHE_IGNORE_SUFFIX` to your
+required view mode and display cache will not interfere.
+
+Please be aware that this feature should only be used by programmers INSIDE the
+code.
+
+*Do not try to use this feature via the admin interface.*
+
+## Pitfalls
+
+Please be aware that JS, CSS and libraries attached in view hooks via
+drupal_add_js(), drupal_add_css() or drupal_add_library() are not reattached
+if the entity view is served from display cache.
+To accomplish this, you need to attach it to the node render array directly via
+the '#attached' key. That way the JS, CSS and libraries are stored along with
+the rendered view mode's HTML.
+
+Setting the granularity to a very high level for example "Cache per URL and per
+User" can lead to useless caching for big sites, because depending on the
+caching mechanismens the lookup gets really slow or older cached items get
+thrown away.
