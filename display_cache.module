@@ -86,6 +86,81 @@ function display_cache_permission() {
 }
 
 /**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * FORM ID: node_type
+ */
+function display_cache_form_node_type_form_alter(&$form, &$form_state) {
+  if (user_access('administer display cache')) {
+    form_load_include($form_state, 'inc', 'display_cache', 'display_cache.admin');
+    display_cache_node_type_form($form, $form_state);
+  }
+}
+
+/**
+ * Implements hook_comment_publish().
+ */
+function display_cache_comment_publish($comment) {
+  display_cache_clear_comment_host_entity_cache($comment);
+}
+
+/**
+ * Implements hook_comment_update().
+ *
+ * This basically implements hook_comment_unpublished() which is not implemented
+ * by the comment module.
+ */
+function display_cache_comment_update($comment) {
+  if ($comment->original && $comment->original->status != $comment->status && $comment->status == COMMENT_NOT_PUBLISHED) {
+    display_cache_clear_comment_host_entity_cache($comment);
+  }
+}
+
+/**
+ * Implements hook_comment_delete().
+ */
+function display_cache_comment_delete($comment) {
+  if ($comment->status == COMMENT_PUBLISHED) {
+    display_cache_clear_comment_host_entity_cache($comment);
+  }
+}
+
+/**
+ * Implemenets hook_node_type_delete().
+ */
+function display_cache_node_type_delete($info) {
+  variable_del('display_cache_comment_publication_clears_host_entity_cache_' . $info->type);
+  variable_del('display_cache_comment_publication_clears_host_entity_cache_node_' . $info->type);
+}
+
+/**
+ * Clears the given comments' host entity if needed.
+ *
+ * @param Object $comment
+ *   The comment.
+ */
+function display_cache_clear_comment_host_entity_cache($comment) {
+  if ($comment->nid) {
+    $node = node_load($comment->nid);
+
+    $should_clear_host_entity_cache_globally = variable_get('display_cache_comment_publication_clears_host_entity_cache_' . $node->type, FALSE);
+
+    $view_modes_to_clear = display_cache_get_comment_publication_clears_host_entity_cache_settings('node', $node->type);
+
+    if ($should_clear_host_entity_cache_globally) {
+      display_cache_flush_cache('node', $node);
+    }
+    elseif (!empty($view_modes_to_clear) && array_sum($view_modes_to_clear) > 0) {
+      foreach ($view_modes_to_clear as $view_mode => $clear) {
+        if ($clear) {
+          display_cache_flush_cache('node', $node, $view_mode);
+        }
+      }
+    }
+  }
+}
+
+/**
  * Flushes the display cache of a given element.
  *
  * If one argument is missing, all following arguments will be replaced with a
@@ -169,6 +244,31 @@ function display_cache_get_settings($entity_type, $bundle, $view_mode) {
   }
 
   return $settings;
+}
+
+/**
+ * Collects the comment publication host entity cache clearing settings.
+ *
+ * @param string $entity_type
+ *   This is almost all the type 'node'. It is just here for completeness.
+ * @param string $bundle
+ *   The bundle to check.
+ * @param string $view_mode
+ *   If given, the settings obtained will be searched for this specific view
+ *   mode.
+ *
+ * @return mixed(array|bool)
+ *   Returns a setting array or a bool if $view_mode has been given.
+ */
+function display_cache_get_comment_publication_clears_host_entity_cache_settings($entity_type, $bundle, $view_mode = NULL) {
+  $variable_name = display_cache_get_comment_publication_clears_host_entity_cache_setting_name($entity_type, $bundle);
+  $result = variable_get($variable_name, array());
+
+  if (!is_null($view_mode)) {
+    $result = isset($result[$view_mode]) ? $result[$view_mode] : FALSE;
+  }
+
+  return $result;
 }
 
 /**
@@ -437,4 +537,17 @@ function display_cache_get_cache_keys($entity_type, $entity_id = NULL, $view_mod
  */
 function _display_cache_clear_cache() {
   cache_clear_all('*', DISPLAY_CACHE_CACHE_BIN, TRUE);
+}
+
+/**
+ * Returns setting name for comment publication host entity clearing.
+ */
+function display_cache_get_comment_publication_clears_host_entity_cache_setting_name($entity_type, $bundle) {
+  $variable_name_parts = array(
+    'display_cache_comment_publication_clears_host_entity_cache',
+    $entity_type,
+    $bundle
+  );
+
+  return implode('_', $variable_name_parts);
 }
