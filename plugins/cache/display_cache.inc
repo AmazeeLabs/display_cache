@@ -43,6 +43,9 @@ function display_cache_panels_get_cache($conf, $display, $args, $contexts, $pane
  * Set cached content.
  */
 function display_cache_panels_set_cache($conf, $content, $display, $args, $contexts, $pane = NULL) {
+  if (!_display_cache_can_cache($content)) {
+    return;
+  }
   $cid = display_cache_panels_get_id($conf, $display, $args, $contexts, $pane);
   cache_set($cid, $content, DISPLAY_CACHE_CACHE_BIN);
 }

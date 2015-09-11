@@ -217,6 +217,8 @@ function display_cache_entity_view_alter(&$build, $entity_type) {
       'bin'         => DISPLAY_CACHE_CACHE_BIN,
       'granularity' => $display_settings['granularity'],
     );
+
+    $build['#post_render'][] = '_display_cache_post_render';
   }
 }
 
@@ -257,6 +259,8 @@ function display_cache_field_attach_view_alter(&$output, $context) {
           'bin'         => 'cache_display_cache',
           'granularity' => $settings[$field_name]['granularity'],
         );
+
+        $element['#post_render'][] = '_display_cache_post_render';
       }
     }
   }
@@ -406,4 +410,50 @@ function display_cache_get_cache_keys($entity_type, $entity_id = NULL, $view_mod
  */
 function _display_cache_clear_cache() {
   cache_clear_all('*', DISPLAY_CACHE_CACHE_BIN, TRUE);
+}
+
+/**
+ * Checks whether content could be cached.
+ *
+ * @param string|array|object $content
+ *   The content to check. Could be:
+ *   - a string,
+ *   - a render array captured in the #post_render callback,
+ *   - panels_cache_object or any object containing "content" property.
+ *
+ * @return bool
+ *   TRUE if content can be cached, FALSE otherwise.
+ */
+function _display_cache_can_cache(&$content) {
+  if (is_string($content)) {
+    // Do not cache forms.
+    if (strpos($content, '<form') !== FALSE) {
+      return FALSE;
+    }
+  }
+  elseif (is_array($content)) {
+    foreach (array('#prefix', '#children', '#suffix') as $key) {
+      if (isset($content[$key]) && is_string($content[$key])) {
+        if (!_display_cache_can_cache($content[$key])) {
+          return FALSE;
+        }
+      }
+    }
+  }
+  elseif (is_object($content) && isset($content->content) && is_string($content->content)) {
+    if (!_display_cache_can_cache($content->content)) {
+      return FALSE;
+    }
+  }
+  return TRUE;
+}
+
+/**
+ * Post render callback that ensures that element can be cached.
+ */
+function _display_cache_post_render($content, &$element) {
+  if (!_display_cache_can_cache($element)) {
+    unset($element['#cache']);
+  }
+  return $content;
 }
