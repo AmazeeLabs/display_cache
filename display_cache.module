@@ -212,10 +212,12 @@ function display_cache_entity_view_alter(&$build, $entity_type) {
 
     $keys = display_cache_get_cache_keys($entity_type, $entity_id, $view_mode, 'entity');
 
+    $expire = (int) variable_get('display_cache_cache_expire_seconds');
     $build['#cache'] = array(
       'keys'        => $keys,
       'bin'         => DISPLAY_CACHE_CACHE_BIN,
       'granularity' => $display_settings['granularity'],
+      'expire' => $expire ? REQUEST_TIME + $expire : CACHE_PERMANENT,
     );
   }
 }
@@ -252,10 +254,12 @@ function display_cache_field_attach_view_alter(&$output, $context) {
 
         $keys = display_cache_get_cache_keys($entity_type, $entity_id, $view_mode, $field_name);
 
+        $expire = (int) variable_get('display_cache_cache_expire_seconds');
         $element['#cache'] = array(
           'keys'        => $keys,
           'bin'         => 'cache_display_cache',
           'granularity' => $settings[$field_name]['granularity'],
+          'expire' => $expire ? REQUEST_TIME + $expire : CACHE_PERMANENT,
         );
       }
     }

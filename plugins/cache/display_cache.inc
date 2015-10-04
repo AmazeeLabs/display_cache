@@ -44,7 +44,9 @@ function display_cache_panels_get_cache($conf, $display, $args, $contexts, $pane
  */
 function display_cache_panels_set_cache($conf, $content, $display, $args, $contexts, $pane = NULL) {
   $cid = display_cache_panels_get_id($conf, $display, $args, $contexts, $pane);
-  cache_set($cid, $content, DISPLAY_CACHE_CACHE_BIN);
+  $expire = (int) variable_get('display_cache_cache_expire_seconds');
+  $expire = $expire ? REQUEST_TIME + $expire : CACHE_PERMANENT;
+  cache_set($cid, $content, DISPLAY_CACHE_CACHE_BIN, $expire);
 }
 
 /**
