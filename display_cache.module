@@ -135,6 +135,32 @@ function display_cache_entity_update($entity, $entity_type) {
   display_cache_flush_cache($entity_type, $entity);
 }
 
+/**
+ * Implements hook_comment_insert().
+ *
+ * Flushes the display cache of the node when a comment is posted on it.
+ */
+function display_cache_comment_insert($comment) {
+  display_cache_flush_cache('node', $comment->nid);
+}
+
+/**
+ * Implements hook_comment_update().
+ *
+ * Flushes the display cache of the node when a comment is update on it.
+ */
+function display_cache_comment_update($comment) {
+  display_cache_flush_cache('node', $comment->nid);
+}
+
+/**
+ * Implements hook_comment_delete().
+ *
+ * Flushes the display cache of the node when a comment is update on it.
+ */
+function display_cache_comment_delete($comment) {
+  display_cache_flush_cache('node', $comment->nid);
+}
 
 /**
  * Returns display cache settings for given entity type, bundle and view mode.
