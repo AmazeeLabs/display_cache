@@ -23,6 +23,11 @@ $plugin = array(
  * Get cached content.
  */
 function display_cache_panels_get_cache($conf, $display, $args, $contexts, $pane = NULL) {
+  // Return false if the global display cache is disabled.
+  if (variable_get('display_cache_disable', FALSE) === TRUE) {
+    return FALSE;
+  }
+
   // This must be a panelizer! Also, for the moment we do not cache panes, only
   // entire panels. The reason is that the panes can contain different types of
   // content, so we have to implement the logic to cache only fields or other
@@ -43,6 +48,10 @@ function display_cache_panels_get_cache($conf, $display, $args, $contexts, $pane
  * Set cached content.
  */
 function display_cache_panels_set_cache($conf, $content, $display, $args, $contexts, $pane = NULL) {
+  // Stop here if the global display cache is disabled.
+  if (variable_get('display_cache_disable', FALSE) === TRUE) {
+    return;
+  }
   $cid = display_cache_panels_get_id($conf, $display, $args, $contexts, $pane);
   $expire = (int) variable_get('display_cache_cache_expire_seconds');
   $expire = $expire ? REQUEST_TIME + $expire : CACHE_PERMANENT;
